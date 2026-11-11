@@ -16,7 +16,8 @@ Unlike simple threshold alert systems, Seasify models multi-stage coastal hydrod
 ## Key Features
 
 - **Real NOAA CO-OPS Telemetry:** Real-time water levels and 6-minute harmonic astronomical predictions fetched directly via NOAA Data and Metadata APIs.
-- **Offline Resilience & Benchmarks:** Bundled historical benchmark datasets for 10 real coastal stations and 6 extreme events (including Hurricane Sandy, Bomb Cyclone Grayson, and Key West wind blowouts).
+- **24 Curated Coastal Stations:** Full network coverage spanning East Coast, Mid-Atlantic, Southeast, Gulf Coast, West Coast, Pacific Northwest, Alaska, and Pacific Islands.
+- **Offline Resilience & Benchmarks:** Bundled historical benchmark datasets for real coastal stations and extreme events (including Hurricane Sandy, Bomb Cyclone Grayson, and Key West wind blowouts).
 - **Custom Theory of Computation Engine:**
   - Deterministic symbol encoder mapping continuous residuals $r(t) = H_{\text{obs}}(t) - H_{\text{pred}}(t)$ and velocity $v_r(t)$ into a formal 9-symbol alphabet $\Sigma = \{ L:F, L:S, L:R, N:F, N:S, N:R, H:F, H:S, H:R, \text{GAP} \}$.
   - Thompson NFA construction from regular expressions with $\varepsilon$-transitions.
@@ -44,7 +45,7 @@ Unlike simple threshold alert systems, Seasify models multi-stage coastal hydrod
 - **State Management:** Zustand
 - **Visualization:** Recharts (time series & charts), Leaflet (station mapping), Custom SVG (automata diagrams & radial gauges)
 - **Data & Parsing:** NOAA CO-OPS REST APIs, PapaParse (CSV ingest & export)
-- **Testing:** Vitest, Testing Library, JSDOM (14 test suites, 212 tests, 100% pass)
+- **Testing:** Vitest, Testing Library, JSDOM (17 test suites, 297 tests, 100% pass)
 - **Deployment:** Production Vite build ready for Cloudflare Pages / Vercel / GitHub Pages
 
 ---
@@ -66,7 +67,7 @@ Open `http://localhost:5173` in your browser.
 ```bash
 npm run test
 ```
-Executes all 212 unit and integration tests across scientific calculations, automata, and components.
+Executes all 297 unit, integration, and routing adversarial tests across scientific calculations, automata, and components.
 
 ### 4. Build for Production
 ```bash
