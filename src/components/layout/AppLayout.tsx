@@ -87,6 +87,7 @@ export const AppLayout: React.FC = () => {
           onStationChange={setSelectedStation}
           selectedRange={selectedRange}
           onRangeChange={setSelectedRange}
+          isStationsScreen={location.pathname === '/stations'}
         />
 
         {/* Scrollable Viewport */}

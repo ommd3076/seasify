@@ -1,7 +1,8 @@
 import React from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Activity } from 'lucide-react';
 import Dropdown from '../common/Dropdown';
 import DateRangePicker from '../common/DateRangePicker';
+import { useStationStore } from '@/stores/stationStore';
 
 export interface HeaderProps {
   title?: string;
@@ -11,6 +12,7 @@ export interface HeaderProps {
   selectedRange?: string;
   onRangeChange?: (range: string) => void;
   extraControls?: React.ReactNode;
+  isStationsScreen?: boolean;
 }
 
 export const STATION_OPTIONS = [
@@ -23,6 +25,14 @@ export const STATION_OPTIONS = [
   { value: '9447130', label: 'Seattle, WA (9447130)' },
 ];
 
+export const STATUS_OPTIONS = [
+  { value: 'All Statuses', label: 'All Statuses' },
+  { value: 'Normal', label: 'Normal' },
+  { value: 'Elevated', label: 'Elevated' },
+  { value: 'Low Tide', label: 'Low Tide' },
+  { value: 'Maintenance', label: 'Maintenance' },
+];
+
 export const Header: React.FC<HeaderProps> = ({
   title = 'Overview',
   subtitle = 'Coastal tide and water-level patterns across your monitoring network',
@@ -31,7 +41,10 @@ export const Header: React.FC<HeaderProps> = ({
   selectedRange = '30d',
   onRangeChange,
   extraControls,
+  isStationsScreen = false,
 }) => {
+  const { statusFilter, setStatusFilter } = useStationStore();
+
   const [station, setStation] = React.useState(selectedStation);
   const [range, setRange] = React.useState(selectedRange);
 
@@ -86,6 +99,17 @@ export const Header: React.FC<HeaderProps> = ({
           onChange={handleStationChange}
           options={STATION_OPTIONS}
         />
+
+        {/* Status Filter Pill on Stations Screen (matching ui-ref Image 2) */}
+        {isStationsScreen && (
+          <Dropdown
+            data-testid="status-filter"
+            icon={<Activity className="w-4 h-4 text-[#737A75]" />}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={STATUS_OPTIONS}
+          />
+        )}
 
         {/* Date Range Filter Pill */}
         <DateRangePicker
