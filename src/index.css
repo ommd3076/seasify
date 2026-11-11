@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #DBE2DB;
+  --surface: #F7F9F6;
+  --surface-muted: #EAEFEC;
+  --charcoal: #242424;
+  --text-primary: #171A18;
+  --text-secondary: #737A75;
+  --mint: #A5F5A6;
+  --mint-strong: #68DD79;
+  --lavender: #C5A8F8;
+  --border: #D9DEDA;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C4CCC5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A9B3AA;
+}
+
+/* Leaflet map container fix */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  background-color: #E2E8E3;
+}
