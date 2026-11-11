@@ -45,7 +45,7 @@ Unlike simple threshold alert systems, Seasify models multi-stage coastal hydrod
 - **State Management:** Zustand
 - **Visualization:** Recharts (time series & charts), Leaflet (station mapping), Custom SVG (automata diagrams & radial gauges)
 - **Data & Parsing:** NOAA CO-OPS REST APIs, PapaParse (CSV ingest & export)
-- **Testing:** Vitest, Testing Library, JSDOM (17 test suites, 297 tests, 100% pass)
+- **Testing:** Vitest, Testing Library, JSDOM (18 test suites, 303 tests, 100% pass)
 - **Deployment:** Production Vite build ready for Cloudflare Pages / Vercel / GitHub Pages
 
 ---
@@ -67,7 +67,7 @@ Open `http://localhost:5173` in your browser.
 ```bash
 npm run test
 ```
-Executes all 297 unit, integration, and routing adversarial tests across scientific calculations, automata, and components.
+Executes all 303 unit, integration, and routing adversarial tests across scientific calculations, automata, and components.
 
 ### 4. Build for Production
 ```bash
