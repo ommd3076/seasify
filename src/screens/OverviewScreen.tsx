@@ -1,32 +1,22 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpRight,
+  ArrowDownRight,
   TrendingUp,
   TrendingDown,
-  AlertTriangle,
-  Clock,
-  ArrowUpRight,
-  ChevronRight,
-  Sparkles,
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Cell,
-} from 'recharts';
 import { useStationStore } from '@/stores/stationStore';
 import { useTideDataStore } from '@/stores/tideDataStore';
 import { useNavigationStore } from '@/stores/navigationStore';
-import { RadialGauge } from '@/components/charts/RadialGauge';
 
 export const OverviewScreen: React.FC = () => {
-  const { selectedStation } = useStationStore();
-  const { points, events, loadStationData } = useTideDataStore();
+  const { stations, selectedStation, selectStation } = useStationStore();
+  const { points, loadStationData } = useTideDataStore();
   const { setCurrentScreen, setSelectedEventId } = useNavigationStore();
+
+  const [stationIndex, setStationIndex] = useState(0);
 
   useEffect(() => {
     if (points.length === 0) {
@@ -34,429 +24,469 @@ export const OverviewScreen: React.FC = () => {
     }
   }, [selectedStation.id]);
 
-  // Aggregate hourly data for Tide Activity bar chart
-  const hourlyActivityData = useMemo(() => {
-    if (!points || points.length === 0) {
-      // Mock 12-hour hourly buckets if empty
-      return Array.from({ length: 12 }, (_, i) => {
-        const hour = `${(i * 2).toString().padStart(2, '0')}:00`;
-        const obs = 1.1 + Math.sin(i * 0.6) * 0.8 + 0.1;
-        const pred = 1.1 + Math.sin(i * 0.6) * 0.8;
-        return {
-          time: hour,
-          observed: Number(obs.toFixed(2)),
-          predicted: Number(pred.toFixed(2)),
-          residual: Number((obs - pred).toFixed(2)),
-          isSurge: obs - pred > 0.15,
-        };
-      });
-    }
+  const handlePrevStation = () => {
+    const nextIdx = (stationIndex - 1 + stations.length) % stations.length;
+    setStationIndex(nextIdx);
+    selectStation(stations[nextIdx].id);
+  };
 
-    // Sample roughly 12 to 16 points across the dataset for clean bar display
-    const step = Math.max(1, Math.floor(points.length / 14));
-    return points
-      .filter((_, idx) => idx % step === 0)
-      .slice(0, 16)
-      .map((p) => {
-        const d = new Date(p.timestamp);
-        const timeLabel = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const obs = p.observed ?? 1.2;
-        const pred = p.predicted ?? 1.2;
-        const res = p.residual ?? 0;
-        return {
-          time: timeLabel,
-          observed: obs,
-          predicted: pred,
-          residual: res,
-          isSurge: Math.abs(res) > 0.18,
-        };
-      });
-  }, [points]);
-
-  const handleInspectEvent = (eventId: string) => {
-    setSelectedEventId(eventId);
-    setCurrentScreen('events');
+  const handleNextStation = () => {
+    const nextIdx = (stationIndex + 1) % stations.length;
+    setStationIndex(nextIdx);
+    selectStation(stations[nextIdx].id);
   };
 
   return (
     <div data-testid="screen-overview" className="space-y-6">
-      {/* Top Main Grid: Tide Activity Charcoal Card & Current Water Level Mint Card */}
+      {/* 2x2 Modular Grid Matching UI Reference */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Tide Activity Charcoal Card (8 cols) */}
-        <div className="lg:col-span-7 xl:col-span-8 bg-charcoal text-white rounded-[28px] p-6 sm:p-7 flex flex-col justify-between shadow-panel border border-charcoal-border relative overflow-hidden">
-          {/* Subtle background glow */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-mint/5 rounded-full blur-3xl pointer-events-none" />
-
-          <div>
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-mint animate-pulse" />
-                  <span className="text-xs uppercase font-mono tracking-widest text-mint font-semibold">
-                    Harmonic Cycle Analysis
-                  </span>
-                </div>
-                <h2 className="text-2xl font-bold text-white mt-1">Tide Activity</h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Hourly observed water level vs astronomical harmonic prediction at {selectedStation.name}
-                </p>
-              </div>
-
-              {/* Summary Stats Badges */}
-              <div className="flex items-center gap-2">
-                <div className="px-3 py-1.5 rounded-20 bg-charcoal-card border border-charcoal-border flex items-center gap-2">
-                  <span className="text-[11px] text-gray-400">Peak Obs:</span>
-                  <span className="text-xs font-mono font-bold text-mint">
-                    {(
-                      Math.max(...hourlyActivityData.map((d) => d.observed), 1.85)
-                    ).toFixed(2)}m
-                  </span>
-                </div>
-                <div className="px-3 py-1.5 rounded-20 bg-charcoal-card border border-charcoal-border flex items-center gap-2">
-                  <span className="text-[11px] text-gray-400">Mean Residual:</span>
-                  <span className="text-xs font-mono font-bold text-lavender">
-                    {selectedStation.residual >= 0 ? '+' : ''}
-                    {selectedStation.residual.toFixed(2)}m
-                  </span>
-                </div>
-              </div>
+        {/* Top-Left: Tide Activity Charcoal Card (6 cols) */}
+        <div className="lg:col-span-6 bg-[#242424] text-white rounded-[28px] p-6 sm:p-7 border border-[#383838] shadow-panel flex flex-col justify-between min-h-[320px]">
+          {/* Card Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-white tracking-tight">
+                Tide Activity
+              </h2>
+              <p className="text-xs text-[#9CA3AF] mt-0.5">
+                Updated 10 min ago
+              </p>
             </div>
 
-            {/* Bar Chart Container */}
-            <div className="h-64 w-full mt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={hourlyActivityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" vertical={false} />
-                  <XAxis
-                    dataKey="time"
-                    stroke="#737A75"
-                    tick={{ fill: '#9CA3AF', fontSize: 11 }}
-                    axisLine={{ stroke: '#383838' }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    stroke="#737A75"
-                    tick={{ fill: '#9CA3AF', fontSize: 11 }}
-                    axisLine={{ stroke: '#383838' }}
-                    tickLine={false}
-                    domain={['dataMin - 0.2', 'dataMax + 0.2']}
-                  />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-charcoal-card border border-charcoal-border rounded-xl p-3 shadow-panel text-xs text-white">
-                          <div className="font-semibold text-gray-300 mb-1">{data.time}</div>
-                          <div className="flex justify-between gap-4 py-0.5">
-                            <span className="text-gray-400">Observed:</span>
-                            <span className="font-mono font-bold text-mint">{data.observed.toFixed(2)}m</span>
-                          </div>
-                          <div className="flex justify-between gap-4 py-0.5">
-                            <span className="text-gray-400">Predicted:</span>
-                            <span className="font-mono text-lavender">{data.predicted.toFixed(2)}m</span>
-                          </div>
-                          <div className="flex justify-between gap-4 py-0.5 border-t border-charcoal-border mt-1 pt-1">
-                            <span className="text-gray-400">Residual:</span>
-                            <span className={`font-mono font-bold ${data.residual >= 0 ? 'text-mint' : 'text-danger'}`}>
-                              {data.residual >= 0 ? '+' : ''}{data.residual.toFixed(2)}m
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Bar dataKey="observed" radius={[6, 6, 0, 0]}>
-                    {hourlyActivityData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.isSurge ? '#A5F5A6' : '#68DD79'}
-                        opacity={entry.isSurge ? 1 : 0.75}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            {/* Dropdown Pill */}
+            <div className="px-3.5 py-1.5 rounded-full bg-[#333333] border border-[#444444] text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer">
+              <span>Monthly</span>
+              <span className="text-[10px] text-gray-400">⌄</span>
             </div>
           </div>
 
-          {/* Charcoal Card Bottom Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-5 mt-4 border-t border-charcoal-border/80">
-            <div className="flex items-center gap-4 text-xs text-gray-300">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-mint inline-block" />
-                <span>Observed Level (m MLLW)</span>
+          {/* Lower Section: Active Stations Stat on Left, 3 Stacked Bars on Right */}
+          <div className="flex items-end justify-between pt-6 mt-4">
+            {/* Left Stat */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-xs text-[#9CA3AF] font-medium">
+                  Active stations
+                </span>
+                <span className="w-4 h-4 rounded-full bg-[#A5F5A6] text-[#171A18] flex items-center justify-center text-[10px] font-bold">
+                  ↗
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-lavender inline-block" />
-                <span>Harmonic Baseline</span>
+              <div className="text-5xl font-black text-white font-sans tracking-tight">
+                128
+              </div>
+            </div>
+
+            {/* Right Stacked 3-Month Bars (Sep, Oct, Nov) */}
+            <div className="flex items-end gap-3 sm:gap-4 pb-1">
+              {/* Sep Bar */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[11px] font-semibold text-[#9CA3AF]">Sep</span>
+                <div className="w-14 sm:w-16 h-28 rounded-2xl overflow-hidden flex flex-col justify-end bg-[#333333]">
+                  <div className="h-16 bg-[#A5F5A6] rounded-t-2xl" />
+                  <div className="h-12 bg-[#C5A8F8]" />
+                </div>
+              </div>
+
+              {/* Oct Bar (Taller) */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[11px] font-semibold text-[#9CA3AF]">Oct</span>
+                <div className="w-14 sm:w-16 h-36 rounded-2xl overflow-hidden flex flex-col justify-end bg-[#333333]">
+                  <div className="h-24 bg-[#A5F5A6] rounded-t-2xl" />
+                  <div className="h-12 bg-[#C5A8F8]" />
+                </div>
+              </div>
+
+              {/* Nov Bar */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[11px] font-semibold text-[#9CA3AF]">Nov</span>
+                <div className="w-14 sm:w-16 h-32 rounded-2xl overflow-hidden flex flex-col justify-end bg-[#333333]">
+                  <div className="h-20 bg-[#A5F5A6] rounded-t-2xl" />
+                  <div className="h-12 bg-[#C5A8F8]" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Top-Right: Recent Events Surface Card (6 cols) */}
+        <div className="lg:col-span-6 bg-surface rounded-[28px] p-6 sm:p-7 border border-border shadow-panel flex flex-col justify-between min-h-[320px]">
+          {/* Card Header */}
+          <div className="flex items-center justify-between pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#242424] text-white flex items-center justify-center shrink-0">
+                <svg
+                  className="w-5 h-5 text-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                >
+                  <path d="M2 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+                  <path d="M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-primary-text leading-tight">
+                  Recent Events
+                </h3>
+                <p className="text-xs text-secondary-text mt-0.5">
+                  Latest tide and water-level anomalies
+                </p>
               </div>
             </div>
 
             <button
-              onClick={() => setCurrentScreen('monitoring')}
-              className="flex items-center gap-1.5 text-xs text-mint hover:text-white font-semibold transition-colors"
+              onClick={() => setCurrentScreen('events')}
+              className="px-3.5 py-1.5 rounded-full border border-border text-xs font-semibold text-primary-text hover:bg-surface-muted transition-all flex items-center gap-1.5"
             >
-              <span>Detailed Telemetry</span>
-              <ArrowUpRight className="w-4 h-4" />
+              <span>View All</span>
+              <span>→</span>
             </button>
           </div>
-        </div>
 
-        {/* Right: Current Water Level Mint Card (4 cols) */}
-        <div className="lg:col-span-5 xl:col-span-4 bg-mint text-charcoal rounded-[28px] p-6 sm:p-7 flex flex-col justify-between shadow-panel border border-mint-strong/40 relative">
-          <div>
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[11px] uppercase tracking-wider font-bold text-charcoal/70">
-                  Live Station Feed
-                </span>
-                <h3 className="text-xl font-black text-charcoal leading-tight">
-                  Water Level
-                </h3>
-              </div>
-              <span className="px-2.5 py-1 rounded-full bg-charcoal text-white text-[11px] font-bold">
-                {selectedStation.state}
-              </span>
-            </div>
-
-            {/* Radial Gauge Display */}
-            <div className="py-2 flex items-center justify-center">
-              <RadialGauge
-                value={selectedStation.waterLevel}
-                min={0}
-                max={3.5}
-                unit="m"
-                title=""
-                status={selectedStation.status.toUpperCase()}
-                statusColor={selectedStation.status === 'elevated' ? 'lavender' : 'mint'}
-                size={230}
-              />
-            </div>
-          </div>
-
-          {/* Live comparison metrics & Tidal Phase */}
-          <div className="space-y-2.5 pt-2 border-t border-charcoal/10">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-charcoal/80">Tidal Phase:</span>
-              <span className="font-bold text-charcoal">{selectedStation.tidalPhase}</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-charcoal/80">Predicted Astro Tide:</span>
-              <span className="font-mono font-bold text-charcoal">
-                {selectedStation.predictedLevel.toFixed(2)} m
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-charcoal/80">Non-Tidal Residual:</span>
-              <span
-                className={`font-mono font-black px-2 py-0.5 rounded-full ${
-                  selectedStation.residual > 0.2
-                    ? 'bg-charcoal text-mint'
-                    : 'bg-white/80 text-charcoal'
-                }`}
-              >
-                {selectedStation.residual >= 0 ? '+' : ''}
-                {selectedStation.residual.toFixed(2)} m
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Grid: Recent Events & Pattern Forecast */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Recent Events Card (6 cols) */}
-        <div className="lg:col-span-6 bg-surface rounded-[28px] p-6 border border-border shadow-panel flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-20 bg-lavender/30 flex items-center justify-center text-charcoal">
-                  <AlertTriangle className="w-5 h-5 text-charcoal" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-primary-text">Recent Events</h3>
-                  <p className="text-xs text-secondary-text">
-                    Automata-detected surge pulses and anomalies
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setCurrentScreen('events')}
-                className="text-xs font-semibold text-primary-text hover:text-charcoal flex items-center gap-1 group"
-              >
-                <span>View All</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-
-            {/* Events List */}
-            <div className="space-y-3">
-              {events.length > 0 ? (
-                events.slice(0, 3).map((event) => (
-                  <div
-                    key={event.id}
-                    onClick={() => handleInspectEvent(event.id)}
-                    className="p-3.5 rounded-24 bg-surface-muted hover:bg-surface-card border border-border cursor-pointer transition-all hover:scale-[1.01] flex items-center justify-between gap-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-2 h-10 rounded-full ${
-                          event.severity === 'High'
-                            ? 'bg-danger'
-                            : event.severity === 'Moderate'
-                            ? 'bg-lavender-dark'
-                            : 'bg-mint-strong'
-                        }`}
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-primary-text">
-                            {event.patternName}
-                          </span>
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              event.severity === 'High'
-                                ? 'bg-danger-bg text-danger'
-                                : 'bg-lavender/30 text-charcoal'
-                            }`}
-                          >
-                            {event.severity}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-secondary-text mt-0.5">
-                          <span>{event.stationName}</span>
-                          <span>•</span>
-                          <span>Peak: +{event.peakResidual.toFixed(2)}m</span>
-                          <span>•</span>
-                          <span>{event.durationMinutes} min</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
-                          event.status === 'Open'
-                            ? 'bg-warning/20 text-warning-dark'
-                            : 'bg-mint/30 text-mint-dark'
-                        }`}
-                      >
-                        {event.status}
-                      </span>
-                      <ArrowUpRight className="w-4 h-4 text-secondary-text" />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="py-8 text-center text-xs text-secondary-text bg-surface-muted rounded-24 border border-dashed border-border">
-                  No critical anomaly events detected in the current window.
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="pt-4 mt-4 border-t border-border flex items-center justify-between text-xs text-secondary-text">
-            <span>Automata Model: Regex AST Determinized DFA</span>
-            <span className="font-mono font-semibold text-primary-text">DFA Engine v1.0</span>
-          </div>
-        </div>
-
-        {/* Pattern Forecast Card (6 cols) */}
-        <div className="lg:col-span-6 bg-surface rounded-[28px] p-6 border border-border shadow-panel flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-20 bg-mint/30 flex items-center justify-center text-charcoal">
-                  <Clock className="w-5 h-5 text-charcoal" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-primary-text">Pattern Forecast</h3>
-                  <p className="text-xs text-secondary-text">
-                    Next tidal extremities and deterministic automata transition projections
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setCurrentScreen('automata_lab')}
-                className="text-xs font-semibold text-primary-text hover:text-charcoal flex items-center gap-1 group"
-              >
-                <span>Automata Lab</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-
-            {/* High and Low Tide Cards */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {/* Next High Tide */}
-              <div className="p-4 rounded-24 bg-surface-muted border border-border flex flex-col justify-between">
-                <div className="flex items-center justify-between text-xs text-secondary-text mb-2">
-                  <div className="flex items-center gap-1.5 font-semibold">
-                    <TrendingUp className="w-3.5 h-3.5 text-mint-strong" />
-                    <span>Next High Tide</span>
-                  </div>
-                  <span className="font-mono text-[10px]">T+04:15</span>
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-primary-text font-mono">
-                    {selectedStation.nextHighTide?.time || '14:26'}
-                  </div>
-                  <p className="text-xs font-semibold text-mint-strong mt-0.5">
-                    Height: {selectedStation.nextHighTide?.height.toFixed(2) || '1.85'} m
-                  </p>
-                </div>
-                <div className="text-[11px] text-secondary-text mt-2 pt-2 border-t border-border/60">
-                  Astronomical crest predicted without major barometric surge.
-                </div>
-              </div>
-
-              {/* Next Low Tide */}
-              <div className="p-4 rounded-24 bg-surface-muted border border-border flex flex-col justify-between">
-                <div className="flex items-center justify-between text-xs text-secondary-text mb-2">
-                  <div className="flex items-center gap-1.5 font-semibold">
-                    <TrendingDown className="w-3.5 h-3.5 text-lavender-dark" />
-                    <span>Next Low Tide</span>
-                  </div>
-                  <span className="font-mono text-[10px]">T+10:35</span>
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-primary-text font-mono">
-                    {selectedStation.nextLowTide?.time || '20:47'}
-                  </div>
-                  <p className="text-xs font-semibold text-lavender-dark mt-0.5">
-                    Height: {selectedStation.nextLowTide?.height.toFixed(2) || '0.22'} m
-                  </p>
-                </div>
-                <div className="text-[11px] text-secondary-text mt-2 pt-2 border-t border-border/60">
-                  Trough clearance safe for deep-draft marine traffic.
-                </div>
-              </div>
-            </div>
-
-            {/* Projected Automata Trajectory */}
-            <div className="p-3.5 rounded-24 bg-charcoal text-white flex items-center justify-between gap-3">
+          {/* 3 Event Rows */}
+          <div className="space-y-3 pt-2">
+            {/* Event 1 */}
+            <div
+              onClick={() => {
+                setSelectedEventId('ev-harbor-point-surge');
+                setCurrentScreen('events');
+              }}
+              className="flex items-center justify-between py-2.5 border-b border-border/70 cursor-pointer hover:bg-surface-muted/40 px-2 rounded-xl transition"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-mint/20 flex items-center justify-center text-mint">
-                  <Sparkles className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-full bg-[#DCFADC] text-[#227C34] flex items-center justify-center font-bold text-sm shrink-0">
+                  <ArrowUpRight className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-white">
-                    Projected State: <span className="text-mint font-mono">S0 (Baseline Stable)</span>
+                  <div className="font-bold text-sm text-primary-text leading-tight">
+                    Elevated water level
                   </div>
-                  <div className="text-[11px] text-gray-400">
-                    No transition into Elevated Surge State (S1) projected in the next 6 hours.
+                  <div className="text-xs text-secondary-text mt-0.5">
+                    Harbor Point • 2 h ago
                   </div>
                 </div>
               </div>
-              <span className="text-xs font-mono font-bold px-2 py-1 rounded bg-charcoal-card text-mint border border-charcoal-border shrink-0">
-                94% Conf
-              </span>
+              <div className="font-bold text-sm text-primary-text font-mono">
+                +0.42 m
+              </div>
+            </div>
+
+            {/* Event 2 */}
+            <div
+              onClick={() => {
+                setSelectedEventId('ev-bayview-blowout');
+                setCurrentScreen('events');
+              }}
+              className="flex items-center justify-between py-2.5 border-b border-border/70 cursor-pointer hover:bg-surface-muted/40 px-2 rounded-xl transition"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#EBE0FE] text-[#784FD8] flex items-center justify-center font-bold text-sm shrink-0">
+                  <ArrowDownRight className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-bold text-sm text-primary-text leading-tight">
+                    Lower-than-expected tide
+                  </div>
+                  <div className="text-xs text-secondary-text mt-0.5">
+                    Bayview Inlet • 5 h ago
+                  </div>
+                </div>
+              </div>
+              <div className="font-bold text-sm text-primary-text font-mono">
+                -0.36 m
+              </div>
+            </div>
+
+            {/* Event 3 */}
+            <div
+              onClick={() => {
+                setSelectedEventId('ev-east-jetty-rise');
+                setCurrentScreen('events');
+              }}
+              className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-surface-muted/40 px-2 rounded-xl transition"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#DCFADC] text-[#227C34] flex items-center justify-center font-bold text-sm shrink-0">
+                  <ArrowUpRight className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-bold text-sm text-primary-text leading-tight">
+                    Rapid water-level rise
+                  </div>
+                  <div className="text-xs text-secondary-text mt-0.5">
+                    East Jetty • 8 h ago
+                  </div>
+                </div>
+              </div>
+              <div className="font-bold text-sm text-primary-text font-mono">
+                +0.51 m
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom-Left: Current Water Level Surface Card (6 cols) */}
+        <div className="lg:col-span-6 bg-surface rounded-[28px] p-6 sm:p-7 border border-border shadow-panel flex flex-col justify-between">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-primary-text leading-tight">
+                Current Water Level
+              </h3>
+              <p className="text-xs text-secondary-text mt-0.5">
+                Live reading at {selectedStation.name}
+              </p>
+            </div>
+
+            {/* Carousel Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrevStation}
+                className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-secondary-text hover:text-primary-text hover:bg-surface-muted transition"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleNextStation}
+                className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-secondary-text hover:text-primary-text hover:bg-surface-muted transition"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          <div className="pt-4 mt-4 border-t border-border flex items-center justify-between text-xs text-secondary-text">
-            <span>Hydrodynamic Tidal Simulation</span>
-            <span className="text-primary-text font-semibold">NOAA Harmonic Spline</span>
+          {/* Inner Mint Container with Semi-Circular Gauge */}
+          <div className="bg-[#A5F5A6] rounded-[24px] p-6 relative flex flex-col justify-between min-h-[240px] shadow-xs">
+            {/* Top-Left Wave Mark */}
+            <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-[#242424] shadow-xs">
+              <svg
+                className="w-5 h-5 text-[#242424]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              >
+                <path d="M2 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+                <path d="M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+              </svg>
+            </div>
+
+            {/* Semi-Circular Arc Radial Gauge */}
+            <div className="flex flex-col items-center justify-center my-2">
+              <div className="relative w-64 h-32 flex items-end justify-center overflow-visible">
+                <svg className="w-64 h-32 overflow-visible" viewBox="0 0 200 100">
+                  <defs>
+                    <pattern
+                      id="gaugeHatch"
+                      width="6"
+                      height="6"
+                      patternTransform="rotate(45 0 0)"
+                      patternUnits="userSpaceOnUse"
+                    >
+                      <line x1="0" y1="0" x2="0" y2="6" stroke="#227C34" strokeWidth="2" />
+                    </pattern>
+                  </defs>
+
+                  {/* Right Arc: Diagonal Hatched Pattern */}
+                  <path
+                    d="M 100 15 A 85 85 0 0 1 185 100"
+                    fill="none"
+                    stroke="url(#gaugeHatch)"
+                    strokeWidth="20"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Left Arc: Solid Charcoal */}
+                  <path
+                    d="M 15 100 A 85 85 0 0 1 125 22"
+                    fill="none"
+                    stroke="#242424"
+                    strokeWidth="20"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Marker Dot: Lavender circle */}
+                  <circle cx="125" cy="22" r="5" fill="#C5A8F8" stroke="#242424" strokeWidth="2" />
+                </svg>
+
+                {/* Gauge Centered Value */}
+                <div className="absolute bottom-2 text-center">
+                  <div className="text-4xl font-black text-[#242424] font-sans tracking-tight">
+                    {selectedStation.waterLevel.toFixed(2)} m
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom-Left Pill */}
+            <div className="pt-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-xs font-bold text-[#171A18] shadow-xs">
+                <span>
+                  {selectedStation.delta24h >= 0 ? '+' : ''}
+                  {selectedStation.delta24h.toFixed(2)} m
+                </span>
+                <span>↗</span>
+              </div>
+              <div className="text-[11px] font-semibold text-[#171A18]/70 mt-1 pl-1">
+                vs. 6 h ago
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom-Right: Pattern Forecast Surface Card (6 cols) */}
+        <div className="lg:col-span-6 bg-surface rounded-[28px] p-6 sm:p-7 border border-border shadow-panel flex flex-col justify-between">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-2xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+              <svg
+                className="w-5 h-5 text-[#227C34]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              >
+                <path d="M2 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+                <path d="M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-primary-text leading-tight">
+                Pattern Forecast
+              </h3>
+              <p className="text-xs text-secondary-text mt-0.5">
+                Expected water-level events and tide pattern
+              </p>
+            </div>
+          </div>
+
+          {/* Content: Left Timeline & Right High/Low Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+            {/* Left Vertical Timeline (5 cols) */}
+            <div className="sm:col-span-5 relative pl-5 space-y-4">
+              {/* Vertical connecting line */}
+              <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-border" />
+
+              {/* Node 1 */}
+              <div className="relative">
+                <div className="absolute -left-[17px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-primary-text bg-surface" />
+                <div className="text-xs font-bold text-primary-text leading-tight">
+                  Today, 14:26
+                </div>
+                <div className="text-[11px] text-secondary-text">
+                  High tide (≈ 2.31 m)
+                </div>
+              </div>
+
+              {/* Node 2 */}
+              <div className="relative">
+                <div className="absolute -left-[17px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-primary-text bg-surface" />
+                <div className="text-xs font-bold text-primary-text leading-tight">
+                  Today, 20:47
+                </div>
+                <div className="text-[11px] text-secondary-text">
+                  Low tide (≈ 0.89 m)
+                </div>
+              </div>
+
+              {/* Node 3 */}
+              <div className="relative">
+                <div className="absolute -left-[17px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-primary-text bg-surface" />
+                <div className="text-xs font-bold text-primary-text leading-tight">
+                  Tomorrow, 03:15
+                </div>
+                <div className="text-[11px] text-secondary-text">
+                  High tide (≈ 2.28 m)
+                </div>
+              </div>
+
+              {/* Node 4 (Solid Dot) */}
+              <div className="relative">
+                <div className="absolute -left-[17px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#171A18]" />
+                <div className="text-xs font-bold text-primary-text leading-tight">
+                  Tomorrow, 09:36
+                </div>
+                <div className="text-[11px] text-secondary-text">
+                  Low tide (≈ 0.93 m)
+                </div>
+              </div>
+            </div>
+
+            {/* Right: High & Low Cards (7 cols) */}
+            <div className="sm:col-span-7 flex flex-col gap-3">
+              {/* Predicted High Tide (Mint card) */}
+              <div className="bg-[#A5F5A6] rounded-[22px] p-4 text-[#171A18] shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#171A18]/80">
+                    Predicted high tide
+                  </span>
+                  <ArrowUpRight className="w-4 h-4 text-[#171A18]" />
+                </div>
+                <div className="my-1">
+                  <div className="text-2xl font-black font-sans tracking-tight text-[#171A18]">
+                    2.31 m
+                  </div>
+                  <div className="text-[11px] font-semibold text-[#171A18]/70">
+                    +0.18 m above mean
+                  </div>
+                </div>
+
+                {/* Wave sparkline with lavender peak dot */}
+                <div className="h-9 w-full">
+                  <svg className="w-full h-full overflow-visible" viewBox="0 0 160 36" fill="none">
+                    <path
+                      d="M 0 28 C 30 32, 60 25, 90 8 C 110 0, 130 18, 160 22 L 160 36 L 0 36 Z"
+                      fill="rgba(34, 124, 52, 0.2)"
+                    />
+                    <path
+                      d="M 0 28 C 30 32, 60 25, 90 8 C 110 0, 130 18, 160 22"
+                      stroke="#227C34"
+                      strokeWidth="2"
+                    />
+                    <circle cx="95" cy="8" r="3.5" fill="#C5A8F8" stroke="#227C34" strokeWidth="1.5" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Next Low Tide (Lavender card) */}
+              <div className="bg-[#C5A8F8] rounded-[22px] p-4 text-[#171A18] shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#171A18]/80">
+                    Next low tide
+                  </span>
+                  <ArrowUpRight className="w-4 h-4 text-[#171A18]" />
+                </div>
+                <div className="my-1">
+                  <div className="text-2xl font-black font-sans tracking-tight text-[#171A18]">
+                    0.89 m
+                  </div>
+                  <div className="text-[11px] font-semibold text-[#171A18]/70">
+                    -0.21 m below mean
+                  </div>
+                </div>
+
+                {/* Wave sparkline with green trough dot */}
+                <div className="h-9 w-full">
+                  <svg className="w-full h-full overflow-visible" viewBox="0 0 160 36" fill="none">
+                    <path
+                      d="M 0 12 C 30 8, 60 28, 90 30 C 120 32, 140 16, 160 14 L 160 36 L 0 36 Z"
+                      fill="rgba(112, 60, 215, 0.2)"
+                    />
+                    <path
+                      d="M 0 12 C 30 8, 60 28, 90 30 C 120 32, 140 16, 160 14"
+                      stroke="#6B21A8"
+                      strokeWidth="2"
+                    />
+                    <circle cx="90" cy="30" r="3.5" fill="#A5F5A6" stroke="#6B21A8" strokeWidth="1.5" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

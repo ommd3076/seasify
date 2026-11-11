@@ -154,7 +154,6 @@ describe('Milestone 1: Layout Shell & Navigation', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('CoastalSight')).toBeInTheDocument();
     expect(screen.getByText('Seasify')).toBeInTheDocument();
     expect(screen.getByText('Tide & Water-Level Analysis')).toBeInTheDocument();
     expect(screen.getByText('NOAA CO-OPS')).toBeInTheDocument();

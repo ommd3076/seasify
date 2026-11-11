@@ -44,7 +44,7 @@ export const Sidebar: React.FC = () => {
         {/* Double-Wave Mark */}
         <div className="w-10 h-10 rounded-2xl bg-[#EAEFEC] flex items-center justify-center flex-shrink-0 border border-[#D9DEDA]">
           <svg
-            className="w-6 h-6 text-[#68DD79]"
+            className="w-6 h-6"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -52,22 +52,16 @@ export const Sidebar: React.FC = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
-            <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
-            <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+            <path d="M2 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0" stroke="#68DD79" />
+            <path d="M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0" stroke="#359D45" />
           </svg>
         </div>
 
         <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-[18px] tracking-tight text-[#171A18] leading-tight truncate">
-              CoastalSight
-            </span>
-            <span className="text-[10px] font-semibold bg-[#A5F5A6] text-[#171A18] px-1.5 py-0.5 rounded-full">
-              Seasify
-            </span>
-          </div>
-          <span className="text-[11px] font-medium text-[#737A75] leading-tight truncate">
+          <span className="font-extrabold text-[20px] tracking-tight text-[#171A18] leading-tight">
+            Seasify
+          </span>
+          <span className="text-[11px] font-medium text-[#737A75] leading-tight truncate mt-0.5">
             Tide & Water-Level Analysis
           </span>
         </div>

@@ -14,7 +14,7 @@ export interface HeaderProps {
 }
 
 export const STATION_OPTIONS = [
-  { value: 'all', label: 'All Stations' },
+  { value: 'all', label: 'All Regions' },
   { value: '9414290', label: 'San Francisco, CA (9414290)' },
   { value: '8518750', label: 'The Battery, NY (8518750)' },
   { value: '8443970', label: 'Boston, MA (8443970)' },
@@ -34,6 +34,10 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [station, setStation] = React.useState(selectedStation);
   const [range, setRange] = React.useState(selectedRange);
+
+  React.useEffect(() => {
+    setStation(selectedStation);
+  }, [selectedStation]);
 
   const handleStationChange = (val: string) => {
     setStation(val);
@@ -70,11 +74,11 @@ export const Header: React.FC<HeaderProps> = ({
         </p>
       </div>
 
-      {/* Right Controls: Filter Pills */}
+      {/* Right Controls: Filter Pills matching ui-ref */}
       <div className="flex items-center gap-3">
         {extraControls}
 
-        {/* Station Filter Pill */}
+        {/* Station / Region Filter Pill */}
         <Dropdown
           data-testid="station-filter"
           icon={<MapPin className="w-4 h-4 text-[#737A75]" />}

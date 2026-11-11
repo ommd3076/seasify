@@ -6,12 +6,11 @@ test.describe('Tier 1 & Tier 4 E2E: Desktop Navigation Shell & Route Transitions
     await page.goto('/');
   });
 
-  test('displays application branding with double-wave mark and Seasify pill', async ({ page }) => {
+  test('displays application branding with double-wave mark and Seasify name', async ({ page }) => {
     const sidebar = page.locator('[data-testid="sidebar"]');
     await expect(sidebar).toBeVisible();
 
-    // Verify brand title and Seasify tag
-    await expect(sidebar).toContainText('CoastalSight');
+    // Verify brand title
     await expect(sidebar).toContainText('Seasify');
     await expect(sidebar).toContainText('Tide & Water-Level Analysis');
   });

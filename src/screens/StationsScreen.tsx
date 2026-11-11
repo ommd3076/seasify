@@ -1,16 +1,35 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
-  AlertTriangle,
-  Compass,
+  ArrowRight,
+  Calendar,
+  Wrench,
 } from 'lucide-react';
 import { useStationStore } from '@/stores/stationStore';
 import { useTideDataStore } from '@/stores/tideDataStore';
 import { StationMap } from '@/components/map/StationMap';
-import { MiniSparkline } from '@/components/charts/MiniSparkline';
 import { StationMetadata } from '@/types/noaa';
 
+// SVG Double-Wave Icon matching ui-ref Image 2
+const WaveIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M2 9c2-1.8 4-1.8 6 0s4 1.8 6 0 4-1.8 6 0" />
+    <path d="M2 15c2-1.8 4-1.8 6 0s4 1.8 6 0 4-1.8 6 0" />
+  </svg>
+);
+
 export const StationsScreen: React.FC = () => {
+  const navigate = useNavigate();
+
   const {
     stations,
     selectedStation,
@@ -18,12 +37,13 @@ export const StationsScreen: React.FC = () => {
     searchQuery,
     setSearchQuery,
     statusFilter,
-    setStatusFilter,
     regionFilter,
-    setRegionFilter,
   } = useStationStore();
 
-  const { points, loadStationData } = useTideDataStore();
+  const { loadStationData } = useTideDataStore();
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 4;
 
   const handleSelectStation = (stationId: string) => {
     selectStation(stationId);
@@ -33,18 +53,13 @@ export const StationsScreen: React.FC = () => {
     }
   };
 
-  // Regions list
-  const regions = useMemo(() => {
-    const list = Array.from(new Set(stations.map((s) => s.region)));
-    return ['All Regions', ...list];
-  }, [stations]);
-
-  // Filtered stations
+  // Filtered stations based on store query and header filters
   const filteredStations = useMemo(() => {
     return stations.filter((s) => {
       const matchesSearch =
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.id.includes(searchQuery) ||
+        s.region.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.state.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus =
@@ -55,395 +70,401 @@ export const StationsScreen: React.FC = () => {
         (statusFilter === 'Maintenance' && s.status === 'maintenance');
 
       const matchesRegion =
-        regionFilter === 'All Regions' || s.region === regionFilter;
+        regionFilter === 'All Regions' ||
+        s.region.toLowerCase().includes(regionFilter.toLowerCase()) ||
+        (regionFilter === 'East Coast' && s.region.includes('East Coast')) ||
+        (regionFilter === 'Gulf Coast' && s.region.includes('Gulf Coast')) ||
+        (regionFilter === 'Pacific NW' && s.region.includes('Pacific Northwest'));
 
       return matchesSearch && matchesStatus && matchesRegion;
     });
   }, [stations, searchQuery, statusFilter, regionFilter]);
 
-  // Sparkline data for selected station
-  const sparklineData = useMemo(() => {
-    if (points && points.length > 0) {
-      return points
-        .filter((_, i) => i % 4 === 0)
-        .map((p) => p.observed ?? 1.2);
-    }
-    // Synthetic fallback curve based on station water level
-    return Array.from({ length: 24 }, (_, i) => {
-      return selectedStation.waterLevel + Math.sin(i * 0.5) * 0.4;
-    });
-  }, [points, selectedStation.waterLevel]);
+  // Paginated stations
+  const totalPages = Math.max(1, Math.ceil(filteredStations.length / ITEMS_PER_PAGE));
+  const validPage = Math.min(currentPage, totalPages);
+  const paginatedStations = useMemo(() => {
+    const start = (validPage - 1) * ITEMS_PER_PAGE;
+    return filteredStations.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredStations, validPage, ITEMS_PER_PAGE]);
 
-  // Status badge helper
-  const renderStatusBadge = (status: StationMetadata['status']) => {
+  // Status Badge / Pill Helper matching ui-ref Image 2
+  const renderStatusPill = (status: StationMetadata['status']) => {
     switch (status) {
       case 'elevated':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-lavender/30 text-charcoal border border-lavender/50">
-            Elevated
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#EDE7FA] text-[#171A18]">
+            <span className="w-2 h-2 rounded-full bg-[#8C52FF]" />
+            <span>Elevated</span>
           </span>
         );
       case 'low_tide':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-warning/20 text-warning-dark border border-warning/40">
-            Low Tide
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E3ECFE] text-[#171A18]">
+            <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
+            <span>Low Tide</span>
           </span>
         );
       case 'maintenance':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-gray-200 text-gray-600 border border-gray-300">
-            Maint
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#EAEFEC] text-[#171A18]">
+            <span className="w-2 h-2 rounded-full bg-[#737A75]" />
+            <span>Maintenance</span>
           </span>
         );
+      case 'normal':
       default:
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-mint/30 text-mint-dark border border-mint/50">
-            Normal
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E2FBE3] text-[#171A18]">
+            <span className="w-2 h-2 rounded-full bg-[#359D45]" />
+            <span>Normal</span>
           </span>
         );
     }
   };
 
+  // Circular Icon Badge for Unselected Row
+  const renderIconBadge = (status: StationMetadata['status']) => {
+    switch (status) {
+      case 'elevated':
+        return (
+          <div className="w-10 h-10 rounded-full bg-[#EDE7FA] text-[#8C52FF] flex items-center justify-center shrink-0">
+            <WaveIcon className="w-5 h-5" />
+          </div>
+        );
+      case 'low_tide':
+        return (
+          <div className="w-10 h-10 rounded-full bg-[#E3ECFE] text-[#3B82F6] flex items-center justify-center shrink-0">
+            <WaveIcon className="w-5 h-5" />
+          </div>
+        );
+      case 'maintenance':
+        return (
+          <div className="w-10 h-10 rounded-full bg-[#EAEFEC] text-[#737A75] flex items-center justify-center shrink-0">
+            <Wrench className="w-4 h-4" />
+          </div>
+        );
+      case 'normal':
+      default:
+        return (
+          <div className="w-10 h-10 rounded-full bg-[#E2FBE3] text-[#359D45] flex items-center justify-center shrink-0">
+            <WaveIcon className="w-5 h-5" />
+          </div>
+        );
+    }
+  };
+
+  // Format anomaly timestamp
+  const anomalyDateStr = useMemo(() => {
+    if (!selectedStation.lastAnomaly?.timestamp) return 'Jan 24, 14:26';
+    const d = new Date(selectedStation.lastAnomaly.timestamp);
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  }, [selectedStation.lastAnomaly]);
+
   return (
-    <div data-testid="screen-stations" className="space-y-6">
-      {/* Top Split: Station Explorer List & Leaflet Coastal Map */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Station Explorer List (5 cols) */}
-        <div className="lg:col-span-5 bg-surface rounded-[28px] border border-border shadow-panel p-5 sm:p-6 flex flex-col h-[560px]">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold text-primary-text flex items-center gap-2">
-                <Compass className="w-5 h-5 text-mint-strong" />
-                Station Explorer
-              </h2>
-              <p className="text-xs text-secondary-text">
-                NOAA CO-OPS Tide Gauges & Telemetry
-              </p>
-            </div>
-            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-surface-muted text-primary-text border border-border">
-              {filteredStations.length} / {stations.length}
-            </span>
-          </div>
+    <div data-testid="screen-stations" className="space-y-5">
+      {/* 2-Column Desktop Grid matching ui-ref Image 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* ====================================================================
+            LEFT PANEL: Station Explorer Card (5 cols)
+            ==================================================================== */}
+        <div className="lg:col-span-5 bg-surface rounded-[28px] border border-[#D9DEDA] shadow-sm p-6 flex flex-col justify-between min-h-[660px]">
+          <div>
+            {/* Header: Title, Station Count & Search Pill */}
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <div>
+                <h2 className="text-[20px] font-bold text-[#171A18] tracking-tight leading-tight">
+                  Station Explorer
+                </h2>
+                <p className="text-[13px] text-[#737A75] font-medium mt-0.5">
+                  {filteredStations.length} stations
+                </p>
+              </div>
 
-          {/* Search Input */}
-          <div className="relative mb-3">
-            <Search className="w-4 h-4 text-secondary-text absolute left-3 top-3" />
-            <input
-              type="text"
-              placeholder="Search station name, ID, or state..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-surface-muted border border-border rounded-20 text-xs text-primary-text placeholder-secondary-text focus:outline-none focus:ring-2 focus:ring-mint transition-all"
-            />
-          </div>
-
-          {/* Status and Region Filters */}
-          <div className="flex flex-col gap-2 mb-3">
-            {/* Status Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
-              {['All Statuses', 'Normal', 'Elevated', 'Low Tide', 'Maintenance'].map(
-                (st) => (
-                  <button
-                    key={st}
-                    onClick={() => setStatusFilter(st)}
-                    className={`px-2.5 py-1 rounded-full font-medium whitespace-nowrap transition-all ${
-                      statusFilter === st
-                        ? 'bg-charcoal text-white font-semibold shadow-xs'
-                        : 'bg-surface-muted text-secondary-text hover:text-primary-text'
-                    }`}
-                  >
-                    {st}
-                  </button>
-                )
-              )}
+              {/* Pill-shaped Search Input */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-[#737A75] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search stations..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="bg-[#EAEFEC] border border-[#D9DEDA] pl-9 pr-4 py-1.5 rounded-full text-xs text-[#171A18] placeholder-[#737A75] w-40 sm:w-48 focus:outline-none focus:ring-2 focus:ring-[#68DD79] transition-all"
+                />
+              </div>
             </div>
 
-            {/* Region Select */}
-            <select
-              value={regionFilter}
-              onChange={(e) => setRegionFilter(e.target.value)}
-              className="w-full px-3 py-1.5 bg-surface-muted border border-border rounded-xl text-xs text-primary-text focus:outline-none focus:ring-1 focus:ring-mint font-medium"
-            >
-              {regions.map((reg) => (
-                <option key={reg} value={reg}>
-                  {reg}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Vertically Stacked Station Items */}
+            <div className="space-y-2.5">
+              {paginatedStations.map((station) => {
+                const isSelected = station.id === selectedStation.id;
 
-          {/* Scrollable Stations List */}
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-            {filteredStations.map((station) => {
-              const isSelected = station.id === selectedStation.id;
-              return (
-                <button
-                  key={station.id}
-                  onClick={() => handleSelectStation(station.id)}
-                  className={`w-full text-left p-3 rounded-20 border transition-all flex items-center justify-between gap-3 ${
-                    isSelected
-                      ? 'bg-charcoal text-white border-charcoal-border shadow-subtle'
-                      : 'bg-surface-card hover:bg-surface-muted border-border text-primary-text'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-2.5 h-8 rounded-full shrink-0 ${
-                        station.status === 'elevated'
-                          ? 'bg-lavender'
-                          : station.status === 'low_tide'
-                          ? 'bg-warning'
-                          : station.status === 'maintenance'
-                          ? 'bg-gray-400'
-                          : 'bg-mint-strong'
-                      }`}
-                    />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs sm:text-sm leading-tight">
-                          {station.name}
-                        </span>
-                        <span
-                          className={`text-[10px] font-mono ${
-                            isSelected ? 'text-gray-300' : 'text-secondary-text'
-                          }`}
-                        >
-                          {station.id}
-                        </span>
+                if (isSelected) {
+                  return (
+                    <button
+                      key={station.id}
+                      onClick={() => handleSelectStation(station.id)}
+                      className="w-full text-left p-3.5 rounded-[22px] border-2 border-[#68DD79] bg-[#E2FBE3] transition-all flex items-center justify-between gap-3 shadow-xs"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* Circular Green Wave Icon Badge */}
+                        <div className="w-10 h-10 rounded-full bg-[#C2F7C5] flex items-center justify-center shrink-0 text-[#171A18]">
+                          <WaveIcon className="w-5 h-5 text-[#359D45]" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-[15px] text-[#171A18] leading-tight truncate">
+                            {station.name}
+                          </div>
+                          <div className="text-[12px] text-[#737A75] mt-0.5 leading-tight truncate font-medium">
+                            {station.region}
+                          </div>
+                        </div>
                       </div>
-                      <div
-                        className={`text-[11px] mt-0.5 flex items-center gap-2 ${
-                          isSelected ? 'text-gray-300' : 'text-secondary-text'
-                        }`}
-                      >
-                        <span>{station.state}</span>
-                        <span>•</span>
-                        <span>{station.tidalPhase}</span>
+
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        {renderStatusPill(station.status)}
+                        <ArrowRight className="w-4 h-4 text-[#171A18]" />
+                      </div>
+                    </button>
+                  );
+                }
+
+                return (
+                  <button
+                    key={station.id}
+                    onClick={() => handleSelectStation(station.id)}
+                    className="w-full text-left p-3.5 rounded-[22px] border border-[#E3E8E4] bg-white hover:bg-[#F4F7F4] transition-all flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {renderIconBadge(station.status)}
+                      <div className="min-w-0">
+                        <div className="font-semibold text-[15px] text-[#171A18] leading-tight truncate">
+                          {station.name}
+                        </div>
+                        <div className="text-[12px] text-[#737A75] mt-0.5 leading-tight truncate font-medium">
+                          {station.region}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col items-end shrink-0">
-                    <span
-                      className={`font-mono font-bold text-xs ${
-                        isSelected ? 'text-mint' : 'text-primary-text'
-                      }`}
-                    >
-                      {station.waterLevel.toFixed(2)} m
-                    </span>
-                    <span
-                      className={`text-[10px] font-mono ${
-                        station.residual >= 0
-                          ? isSelected
-                            ? 'text-mint'
-                            : 'text-mint-dark'
-                          : 'text-danger'
-                      }`}
-                    >
-                      {station.residual >= 0 ? '+' : ''}
-                      {station.residual.toFixed(2)}m
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      {renderStatusPill(station.status)}
+                      <ArrowRight className="w-4 h-4 text-[#737A75]" />
+                    </div>
+                  </button>
+                );
+              })}
 
-        {/* Right: Leaflet Coastal Map (7 cols) */}
-        <div className="lg:col-span-7 bg-surface rounded-[28px] border border-border shadow-panel p-5 sm:p-6 flex flex-col justify-between h-[560px]">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-mint-strong animate-pulse" />
-              <h3 className="text-base font-bold text-primary-text">
-                Coastal Station Sensor Network
-              </h3>
-            </div>
-            <div className="flex items-center gap-3 text-xs text-secondary-text">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-mint-strong" />
-                <span>Normal</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-lavender" />
-                <span>Elevated Surge</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-warning" />
-                <span>Low Tide</span>
-              </div>
+              {paginatedStations.length === 0 && (
+                <div className="py-12 text-center text-[#737A75] text-xs">
+                  No stations match your filter criteria.
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Leaflet Map Integration */}
-          <div className="flex-1 w-full rounded-24 overflow-hidden border border-border relative">
-            <StationMap
-              stations={filteredStations}
-              selectedStationId={selectedStation.id}
-              onSelectStation={handleSelectStation}
-              height="100%"
-            />
-          </div>
-
-          <div className="pt-3 mt-2 flex items-center justify-between text-xs text-secondary-text">
-            <span>Coordinates: {selectedStation.lat.toFixed(4)}°N, {selectedStation.lng.toFixed(4)}°W</span>
-            <span className="font-semibold text-primary-text">Datum: MLLW (Tidal Baseline)</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Selected Station Details Card */}
-      <div className="bg-surface rounded-[28px] border border-border shadow-panel p-6 sm:p-7">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-24 bg-charcoal text-mint flex items-center justify-center font-bold text-lg shadow-subtle">
-              {selectedStation.state}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-2xl font-bold text-primary-text">
-                  {selectedStation.name}
-                </h3>
-                {renderStatusBadge(selectedStation.status)}
-              </div>
-              <p className="text-xs text-secondary-text font-mono mt-0.5">
-                NOAA Station ID: {selectedStation.id} • Region: {selectedStation.region}
-              </p>
-            </div>
-          </div>
-
-          {/* Sparkline Trend Container */}
-          <div className="flex items-center gap-4 bg-surface-muted px-4 py-2.5 rounded-24 border border-border">
-            <div>
-              <span className="text-[11px] text-secondary-text font-medium block">
-                24-Hour Observed Trend
-              </span>
-              <span className="text-sm font-bold text-primary-text font-mono">
-                {selectedStation.waterLevel.toFixed(2)}m (Δ: {selectedStation.delta24h >= 0 ? '+' : ''}{selectedStation.delta24h.toFixed(2)}m)
-              </span>
-            </div>
-            <div className="w-32">
-              <MiniSparkline
-                data={sparklineData}
-                variant={selectedStation.status === 'elevated' ? 'lavender' : 'mint'}
-                height={32}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 4 Metrics Columns */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="p-4 rounded-24 bg-surface-muted border border-border">
-            <span className="text-xs text-secondary-text font-medium block">Observed Level</span>
-            <div className="text-2xl font-black text-primary-text font-mono mt-1">
-              {selectedStation.waterLevel.toFixed(2)}
-              <span className="text-xs font-normal text-secondary-text ml-1">m</span>
-            </div>
-            <span className="text-[11px] text-mint-dark font-semibold mt-1 block">
-              Continuous Acoustic Sensor
-            </span>
-          </div>
-
-          <div className="p-4 rounded-24 bg-surface-muted border border-border">
-            <span className="text-xs text-secondary-text font-medium block">Harmonic Predicted</span>
-            <div className="text-2xl font-black text-primary-text font-mono mt-1">
-              {selectedStation.predictedLevel.toFixed(2)}
-              <span className="text-xs font-normal text-secondary-text ml-1">m</span>
-            </div>
-            <span className="text-[11px] text-secondary-text font-semibold mt-1 block">
-              NOAA Astronomical Model
-            </span>
-          </div>
-
-          <div className="p-4 rounded-24 bg-surface-muted border border-border">
-            <span className="text-xs text-secondary-text font-medium block">Non-Tidal Residual</span>
-            <div
-              className={`text-2xl font-black font-mono mt-1 ${
-                selectedStation.residual >= 0 ? 'text-mint-dark' : 'text-danger'
-              }`}
+          {/* Pagination Pill Bar (< 1 2 3 ... 6 >) */}
+          <div className="flex items-center justify-center gap-1.5 pt-4 mt-4 border-t border-[#EAEFEC] select-none">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={validPage === 1}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-xs text-[#737A75] hover:text-[#171A18] hover:bg-[#EAEFEC] disabled:opacity-30 transition-colors font-medium"
             >
-              {selectedStation.residual >= 0 ? '+' : ''}
-              {selectedStation.residual.toFixed(2)}
-              <span className="text-xs font-normal text-secondary-text ml-1">m</span>
-            </div>
-            <span className="text-[11px] text-secondary-text font-semibold mt-1 block">
-              Atmospheric / Wind Forcing
-            </span>
-          </div>
+              &lt;
+            </button>
 
-          <div className="p-4 rounded-24 bg-surface-muted border border-border">
-            <span className="text-xs text-secondary-text font-medium block">30-Day Mean Trend</span>
-            <div className="text-2xl font-black text-primary-text font-mono mt-1">
-              {selectedStation.trend30d >= 0 ? '+' : ''}
-              {selectedStation.trend30d.toFixed(2)}
-              <span className="text-xs font-normal text-secondary-text ml-1">m</span>
-            </div>
-            <span className="text-[11px] text-secondary-text font-semibold mt-1 block">
-              Sub-Seasonal Baseline Shift
-            </span>
+            {Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
+                  validPage === page
+                    ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
+                    : 'text-[#737A75] hover:text-[#171A18] hover:bg-[#EAEFEC]'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            {totalPages > 3 && (
+              <>
+                <span className="text-xs text-[#737A75] px-1 font-medium">...</span>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
+                    validPage === totalPages
+                      ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
+                      : 'text-[#737A75] hover:text-[#171A18] hover:bg-[#EAEFEC]'
+                  }`}
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={validPage === totalPages}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-xs text-[#737A75] hover:text-[#171A18] hover:bg-[#EAEFEC] disabled:opacity-30 transition-colors font-medium"
+            >
+              &gt;
+            </button>
           </div>
         </div>
 
-        {/* Anomaly History Table for Station */}
-        <div>
-          <h4 className="text-sm font-bold text-primary-text mb-3 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-warning" />
-            Station Anomaly Log & Automata History
-          </h4>
-          <div className="overflow-x-auto rounded-20 border border-border">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-surface-muted text-secondary-text uppercase text-[10px] tracking-wider font-semibold border-b border-border">
-                <tr>
-                  <th className="px-4 py-3">Timestamp (UTC)</th>
-                  <th className="px-4 py-3">Event Type / Description</th>
-                  <th className="px-4 py-3">Peak Residual</th>
-                  <th className="px-4 py-3">Severity</th>
-                  <th className="px-4 py-3">DFA State Path</th>
-                  <th className="px-4 py-3 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border bg-surface">
-                {selectedStation.lastAnomaly ? (
-                  <tr className="hover:bg-surface-muted/50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-secondary-text">
-                      {new Date(selectedStation.lastAnomaly.timestamp).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-primary-text">
-                      {selectedStation.lastAnomaly.description}
-                    </td>
-                    <td className="px-4 py-3 font-mono font-bold text-primary-text">
-                      +{selectedStation.lastAnomaly.delta.toFixed(2)} m
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          selectedStation.lastAnomaly.severity === 'High'
-                            ? 'bg-danger-bg text-danger'
-                            : 'bg-lavender/30 text-charcoal'
-                        }`}
-                      >
-                        {selectedStation.lastAnomaly.severity}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-secondary-text text-[11px]">
-                      S0 → S1 → S2
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="px-2 py-0.5 rounded-full bg-mint/30 text-mint-dark font-bold text-[10px]">
-                        Resolved
-                      </span>
-                    </td>
-                  </tr>
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-secondary-text">
-                      No anomalous hydro events logged for this station.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {/* ====================================================================
+            RIGHT PANEL: Leaflet Map + Selected Station Card (7 cols)
+            ==================================================================== */}
+        <div className="lg:col-span-7 space-y-5">
+          {/* Top: Leaflet Coastal Map Card */}
+          <StationMap
+            stations={filteredStations}
+            selectedStationId={selectedStation.id}
+            onSelectStation={handleSelectStation}
+            height={370}
+          />
+
+          {/* Bottom: Selected Station Summary Card */}
+          <div className="bg-surface rounded-[28px] border border-[#D9DEDA] shadow-sm p-6">
+            {/* Header: Circle Icon, Station Name & ID, Status Pill */}
+            <div className="flex items-center justify-between gap-4 mb-5 pb-4 border-b border-[#EAEFEC]">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-full bg-[#E2FBE3] text-[#359D45] flex items-center justify-center shrink-0">
+                  <WaveIcon className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[20px] font-bold text-[#171A18] tracking-tight leading-tight truncate">
+                    {selectedStation.name}
+                  </h3>
+                  <p className="text-[13px] text-[#737A75] font-medium mt-0.5 truncate">
+                    {selectedStation.region} • Station ID: {selectedStation.id}
+                  </p>
+                </div>
+              </div>
+
+              <div className="shrink-0">
+                {renderStatusPill(selectedStation.status)}
+              </div>
+            </div>
+
+            {/* 3 Columns Subcards Grid matching ui-ref Image 2 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Subcard 1: Current Water Level (Mint) */}
+              <div className="bg-[#B8F5BC] rounded-[24px] p-5 flex flex-col justify-between h-[185px] relative overflow-hidden shadow-xs">
+                <div>
+                  <span className="text-[13px] font-semibold text-[#171A18]/80 block">
+                    Current Water Level
+                  </span>
+                  <div className="text-[34px] font-black tracking-tight text-[#171A18] leading-tight my-1">
+                    {selectedStation.waterLevel.toFixed(2)} m
+                  </div>
+                  <span className="text-[12px] font-medium text-[#171A18]/75 block">
+                    {selectedStation.delta24h >= 0 ? '+' : ''}
+                    {selectedStation.delta24h.toFixed(2)} m vs. 24 h ago
+                  </span>
+                </div>
+
+                {/* Smooth bezier wave graphic with endpoint dot */}
+                <div className="w-full h-12 mt-2">
+                  <svg viewBox="0 0 200 48" className="w-full h-full overflow-visible">
+                    <defs>
+                      <linearGradient id="mintWaveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#242424" stopOpacity="0.10" />
+                        <stop offset="100%" stopColor="#242424" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M 0 38 Q 45 44 75 24 T 150 26 T 190 14"
+                      fill="none"
+                      stroke="#171A18"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M 0 38 Q 45 44 75 24 T 150 26 T 190 14 L 190 48 L 0 48 Z"
+                      fill="url(#mintWaveGrad)"
+                    />
+                    <circle
+                      cx="190"
+                      cy="14"
+                      r="3.5"
+                      fill="#FFFFFF"
+                      stroke="#171A18"
+                      strokeWidth="2.5"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Subcard 2: Trend (30 days) (Lavender) */}
+              <div className="bg-[#DDD0F8] rounded-[24px] p-5 flex flex-col justify-between h-[185px] relative overflow-hidden shadow-xs">
+                <div>
+                  <span className="text-[13px] font-semibold text-[#171A18]/80 block">
+                    Trend (30 days)
+                  </span>
+                  <div className="text-[26px] font-extrabold tracking-tight text-[#171A18] leading-tight my-1 flex items-center gap-1.5">
+                    <span>↗</span>
+                    <span>
+                      {selectedStation.trend30d >= 0 ? '+' : ''}
+                      {selectedStation.trend30d.toFixed(2)} m
+                    </span>
+                  </div>
+                </div>
+
+                {/* Lavender filled area curve */}
+                <div className="w-full h-12 mt-2">
+                  <svg viewBox="0 0 200 48" className="w-full h-full overflow-visible">
+                    <path
+                      d="M 0 34 Q 50 42 90 28 T 160 18 T 200 16 L 200 48 L 0 48 Z"
+                      fill="#9D73EE"
+                      fillOpacity="0.45"
+                    />
+                    <path
+                      d="M 0 34 Q 50 42 90 28 T 160 18 T 200 16"
+                      fill="none"
+                      stroke="#8C52FF"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Subcard 3: Last Anomaly (Surface Card) */}
+              <div
+                onClick={() => navigate('/events')}
+                className="bg-white border border-[#D9DEDA] rounded-[24px] p-5 flex flex-col justify-between h-[185px] hover:border-[#B5BEB6] transition-all cursor-pointer shadow-xs group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[#171A18]" />
+                    <span className="text-[13px] font-semibold text-[#171A18]">
+                      Last Anomaly
+                    </span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-[#737A75] group-hover:text-[#171A18] group-hover:translate-x-0.5 transition-all" />
+                </div>
+
+                <div>
+                  <div className="text-[18px] font-bold text-[#171A18] leading-snug">
+                    {anomalyDateStr}
+                  </div>
+                  <p className="text-[13px] text-[#737A75] mt-1 font-medium leading-snug">
+                    {selectedStation.lastAnomaly?.description || 'Elevated water level (+0.51 m)'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

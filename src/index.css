@@ -192,3 +192,17 @@
   border-radius: 20px;
   background-color: #E2E8E3;
 }
+
+/* Leaflet custom speech bubble tooltip for selected station (ui-ref Image 2) */
+.leaflet-tooltip.station-speech-bubble {
+  background-color: #FFFFFF !important;
+  color: #171A18 !important;
+  border: 1px solid #D9DEDA !important;
+  border-radius: 9999px !important;
+  padding: 5px 13px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.09) !important;
+}
+
+.leaflet-tooltip.station-speech-bubble::before {
+  border-top-color: #FFFFFF !important;
+}
