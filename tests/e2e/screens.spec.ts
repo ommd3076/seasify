@@ -9,7 +9,7 @@ test.describe('Tier 1 & Tier 4 E2E: 10 Desktop Application Screens Inspection', 
     await page.goto('/overview');
 
     // Overview header
-    await expect(page.locator('header, h1, h2')).toBeVisible();
+    await expect(page.locator('header').first()).toBeVisible();
 
     // Verify main content container rendered
     const mainContent = page.locator('main');
