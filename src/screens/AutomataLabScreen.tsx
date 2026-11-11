@@ -58,7 +58,7 @@ export const AutomataLabScreen: React.FC = () => {
             variant="charcoal"
             title="Active Automaton Model"
             value={selectedPattern?.name || 'Sustained Surge'}
-            subtitle={`Regular Expression: ${selectedPattern?.regexDescription || 'Rise Hold+ Fall'}`}
+            subtitle={`Regular Expression: ${selectedPattern?.ruleSummary || selectedPattern?.description || 'Rise Hold+ Fall'}`}
             unit="DFA"
             badge={
               <Badge variant="normal" size="sm">
