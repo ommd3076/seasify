@@ -1,17 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Search,
-  Filter,
-  MapPin,
-  TrendingUp,
-  TrendingDown,
-  Activity,
   AlertTriangle,
   Compass,
-  ArrowUpRight,
-  Clock,
-  CheckCircle2,
-  Calendar,
 } from 'lucide-react';
 import { useStationStore } from '@/stores/stationStore';
 import { useTideDataStore } from '@/stores/tideDataStore';
@@ -114,7 +105,7 @@ export const StationsScreen: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div data-testid="screen-stations" className="space-y-6">
       {/* Top Split: Station Explorer List & Leaflet Coastal Map */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Station Explorer List (5 cols) */}

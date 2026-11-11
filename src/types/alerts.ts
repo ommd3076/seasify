@@ -32,6 +32,7 @@ export interface NotificationChannels {
   teams: boolean;
   teamsWebhook: string;
   inApp: boolean;
+  webhook?: boolean;
   quietHoursEnabled: boolean;
   quietHoursStart: string;
   quietHoursEnd: string;

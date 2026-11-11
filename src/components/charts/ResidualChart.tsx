@@ -167,7 +167,7 @@ export const ResidualChart: React.FC<ResidualChartProps> = ({
       )}
 
       <div style={{ width: '100%', height }} className="relative select-none">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
           <ComposedChart
             data={enrichedData}
             margin={{ top: 10, right: 16, left: -10, bottom: 6 }}

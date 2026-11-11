@@ -5,11 +5,7 @@ import {
   AlertTriangle,
   Clock,
   ArrowUpRight,
-  ShieldCheck,
-  Activity,
-  Layers,
   ChevronRight,
-  Calendar,
   Sparkles,
 } from 'lucide-react';
 import {
@@ -26,11 +22,10 @@ import { useStationStore } from '@/stores/stationStore';
 import { useTideDataStore } from '@/stores/tideDataStore';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { RadialGauge } from '@/components/charts/RadialGauge';
-import { MiniSparkline } from '@/components/charts/MiniSparkline';
 
 export const OverviewScreen: React.FC = () => {
   const { selectedStation } = useStationStore();
-  const { points, events, loadStationData, isLoading } = useTideDataStore();
+  const { points, events, loadStationData } = useTideDataStore();
   const { setCurrentScreen, setSelectedEventId } = useNavigationStore();
 
   useEffect(() => {
@@ -84,7 +79,7 @@ export const OverviewScreen: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div data-testid="screen-overview" className="space-y-6">
       {/* Top Main Grid: Tide Activity Charcoal Card & Current Water Level Mint Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Tide Activity Charcoal Card (8 cols) */}

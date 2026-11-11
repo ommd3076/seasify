@@ -9,24 +9,32 @@ export interface DropdownOption {
 }
 
 export interface DropdownProps {
-  options: DropdownOption[];
+  options: Array<DropdownOption | string>;
   value: string;
   onChange: (value: string) => void;
+  icon?: React.ReactNode;
   placeholder?: string;
   label?: string;
   className?: string;
+  'data-testid'?: string;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
-  options,
+  options: rawOptions,
   value,
   onChange,
-  placeholder = 'Select option...',
+  icon,
+  placeholder = 'Select...',
   label,
   className = '',
+  'data-testid': testId,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const options: DropdownOption[] = rawOptions.map((opt) =>
+    typeof opt === 'string' ? { value: opt, label: opt } : opt
+  );
 
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -41,58 +49,67 @@ export const Dropdown: React.FC<DropdownProps> = ({
   }, []);
 
   return (
-    <div ref={containerRef} className={`relative inline-block text-left ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative inline-block text-left ${className}`}
+      data-testid={testId || 'dropdown'}
+    >
       {label && (
         <label className="block text-[11px] font-semibold text-secondary-text uppercase tracking-wider mb-1">
           {label}
         </label>
       )}
 
-      {/* Trigger Button */}
+      {/* Trigger Pill Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between gap-2.5 px-4 py-2 rounded-full bg-surface border border-border hover:bg-surface-muted text-xs font-medium text-primary-text shadow-xs transition-colors"
+        className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#F7F9F6] border border-[#D9DEDA] shadow-sm hover:border-[#68DD79] transition text-sm font-medium text-[#171A18] focus:outline-none cursor-pointer select-none"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
-        <span className="truncate">
+        {icon}
+        <span className="truncate max-w-[150px]">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown
-          size={14}
-          className={`text-secondary-text shrink-0 transition-transform duration-200 ${
+          className={`w-3.5 h-3.5 text-[#737A75] transition-transform duration-150 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
       </button>
 
-      {/* Options Menu */}
+      {/* Popover Menu */}
       {isOpen && (
-        <div className="absolute left-0 right-0 mt-1.5 z-50 bg-surface rounded-20px border border-border shadow-panel p-1.5 max-h-60 overflow-y-auto backdrop-blur-md">
+        <div
+          role="listbox"
+          className="absolute right-0 mt-2 w-56 rounded-card bg-[#F7F9F6] border border-[#D9DEDA] shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-2 z-50 focus:outline-none animate-in fade-in duration-100"
+        >
           {options.map((option) => {
             const isSelected = option.value === value;
             return (
               <button
                 key={option.value}
                 type="button"
+                role="option"
+                aria-selected={isSelected}
                 onClick={() => {
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-14px text-xs text-left transition-colors ${
+                className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left transition cursor-pointer ${
                   isSelected
-                    ? 'bg-charcoal text-white font-semibold'
-                    : 'text-primary-text hover:bg-surface-muted'
+                    ? 'bg-[#A5F5A6]/40 font-semibold text-[#171A18]'
+                    : 'text-[#171A18] hover:bg-[#EAEFEC]'
                 }`}
               >
                 <div className="truncate pr-2">
                   <div className="truncate">{option.label}</div>
                   {option.subtitle && (
-                    <div className={`text-[10px] ${isSelected ? 'text-gray-300' : 'text-secondary-text'}`}>
-                      {option.subtitle}
-                    </div>
+                    <div className="text-[10px] text-[#737A75]">{option.subtitle}</div>
                   )}
                 </div>
-                {isSelected && <Check size={14} className="shrink-0 text-[#68DD79]" />}
+                {isSelected && <Check className="w-4 h-4 text-[#171A18] shrink-0" />}
               </button>
             );
           })}

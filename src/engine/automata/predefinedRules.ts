@@ -40,6 +40,7 @@ export const PREDEFINED_PATTERNS: FormalDFA[] = [
     ],
     transitions: [
       { from: 'S0', to: 'S1', symbol: 'Rise', label: '↑ Rise', conditionDescription: 'Residual > +0.20 m' },
+      { from: 'S0', to: 'S1', symbol: 'Hold', label: '≈ Hold', conditionDescription: 'Persistent positive residual' },
       { from: 'S0', to: 'S0', symbol: 'Normal', label: 'Normal', conditionDescription: 'Normal residual' },
       { from: 'S1', to: 'S2', symbol: 'Hold', label: 'Hold (Sample 2)', conditionDescription: 'Persistent positive residual' },
       { from: 'S1', to: 'S0', symbol: 'Fall', label: 'Fall', conditionDescription: 'Quick dissipation' },
@@ -63,6 +64,7 @@ export const PREDEFINED_PATTERNS: FormalDFA[] = [
     ],
     transitions: [
       { from: 'S0', to: 'S1', symbol: 'Fall', label: '↓ Fall', conditionDescription: 'Residual < -0.20 m' },
+      { from: 'S0', to: 'S1', symbol: 'Low', label: '↓ Low', conditionDescription: 'Residual < -0.20 m' },
       { from: 'S0', to: 'S0', symbol: 'Normal', label: 'Normal', conditionDescription: 'Within normal band' },
       { from: 'S1', to: 'S2', symbol: 'Low', label: 'Low (Sample 2)', conditionDescription: 'Sustained negative residual' },
       { from: 'S1', to: 'S0', symbol: 'Rise', label: 'Rise', conditionDescription: 'Return to normal' },

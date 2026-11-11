@@ -1,5 +1,5 @@
 export type Datum = 'MLLW' | 'MSL' | 'NAVD88' | 'MHHW';
-export type UnitSystem = 'metric' | 'english';
+export type UnitSystem = 'metric' | 'english' | 'imperial';
 export type QualityFlag = 'verified' | 'preliminary' | 'interpolated' | 'missing';
 
 export interface StationMetadata {

@@ -53,10 +53,15 @@ export const EventTape: React.FC<EventTapeProps> = ({
       const containerWidth = container.offsetWidth;
       const cellLeft = activeCell.offsetLeft;
       const cellWidth = activeCell.offsetWidth;
-      container.scrollTo({
-        left: cellLeft - containerWidth / 2 + cellWidth / 2,
-        behavior: 'smooth',
-      });
+      const scrollPos = cellLeft - containerWidth / 2 + cellWidth / 2;
+      if (typeof container.scrollTo === 'function') {
+        container.scrollTo({
+          left: scrollPos,
+          behavior: 'smooth',
+        });
+      } else {
+        container.scrollLeft = scrollPos;
+      }
     }
   }, [activeIndex]);
 

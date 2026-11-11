@@ -1,160 +1,115 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import {
-  Waves,
   LayoutDashboard,
-  Compass,
+  Radio,
   Activity,
-  Layers,
+  TrendingUp,
   AlertTriangle,
-  FileBarChart2,
+  FileText,
   UploadCloud,
   Bell,
   Settings,
-  Workflow,
-  Radio,
-  ChevronRight,
+  Cpu,
 } from 'lucide-react';
-import { useNavigationStore, ScreenId } from '@/stores/navigationStore';
-import { useAlertStore } from '@/stores/alertStore';
 
-interface NavItem {
-  id: ScreenId;
-  label: string;
+export interface NavItem {
+  id: string;
+  name: string;
+  path: string;
   icon: React.ComponentType<{ className?: string }>;
-  badge?: string | number;
 }
 
+export const NAV_ITEMS: NavItem[] = [
+  { id: 'overview', name: 'Overview', path: '/overview', icon: LayoutDashboard },
+  { id: 'stations', name: 'Stations', path: '/stations', icon: Radio },
+  { id: 'monitoring', name: 'Monitoring', path: '/monitoring', icon: Activity },
+  { id: 'patterns', name: 'Patterns', path: '/patterns', icon: TrendingUp },
+  { id: 'events', name: 'Events', path: '/events', icon: AlertTriangle },
+  { id: 'reports', name: 'Reports', path: '/reports', icon: FileText },
+  { id: 'upload', name: 'Upload', path: '/upload', icon: UploadCloud },
+  { id: 'alerts', name: 'Alerts', path: '/alerts', icon: Bell },
+  { id: 'settings', name: 'Settings', path: '/settings', icon: Settings },
+  { id: 'pattern-engine', name: 'Pattern Engine', path: '/pattern-engine', icon: Cpu },
+];
+
 export const Sidebar: React.FC = () => {
-  const { currentScreen, setCurrentScreen } = useNavigationStore();
-  const { triggeredAlerts } = useAlertStore();
-
-  const activeAlertCount = triggeredAlerts.filter((a) => a.status === 'Active').length;
-
-  const navItems: NavItem[] = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'stations', label: 'Stations', icon: Compass },
-    { id: 'monitoring', label: 'Monitoring', icon: Activity },
-    { id: 'patterns', label: 'Patterns', icon: Layers },
-    { id: 'events', label: 'Events', icon: AlertTriangle, badge: '3' },
-    { id: 'reports', label: 'Reports', icon: FileBarChart2 },
-    { id: 'upload', label: 'Upload Data', icon: UploadCloud },
-    {
-      id: 'alerts',
-      label: 'Alerts',
-      icon: Bell,
-      badge: activeAlertCount > 0 ? activeAlertCount : undefined,
-    },
-    { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'automata_lab', label: 'Automata Lab', icon: Workflow, badge: 'DFA' },
-  ];
-
   return (
-    <aside className="w-64 h-[calc(100vh-2rem)] my-4 ml-4 flex flex-col justify-between bg-surface rounded-[28px] border border-border shadow-panel p-4 select-none shrink-0 z-30">
-      {/* Brand Header */}
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-3 px-2 pt-2">
-          <div className="w-11 h-11 rounded-20 bg-charcoal flex items-center justify-center shadow-subtle relative overflow-hidden group">
-            <div className="absolute inset-0 bg-mint opacity-20 group-hover:opacity-30 transition-opacity" />
-            <Waves className="w-6 h-6 text-mint animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-xl tracking-tight text-primary-text">Seasify</span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-mint/30 text-charcoal">
-                DFA v1
-              </span>
-            </div>
-            <p className="text-[11px] text-secondary-text font-medium leading-none mt-0.5">
-              Coastal Tide Automata
-            </p>
-          </div>
+    <aside
+      data-testid="sidebar"
+      className="w-[260px] xl:w-[280px] h-full flex-shrink-0 rounded-[28px] bg-[#F7F9F6] border border-[#D9DEDA] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col p-5 select-none"
+    >
+      {/* Brand & Logo Header */}
+      <div className="flex items-center gap-3.5 px-2 py-1 mb-6">
+        {/* Double-Wave Mark */}
+        <div className="w-10 h-10 rounded-2xl bg-[#EAEFEC] flex items-center justify-center flex-shrink-0 border border-[#D9DEDA]">
+          <svg
+            className="w-6 h-6 text-[#68DD79]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+            <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+            <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+          </svg>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex flex-col gap-1 overflow-y-auto pr-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentScreen === item.id;
-            const isLab = item.id === 'automata_lab';
-
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentScreen(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-[20px] transition-all text-sm font-medium ${
-                  isActive
-                    ? 'bg-charcoal text-white shadow-subtle'
-                    : isLab
-                    ? 'hover:bg-lavender/20 text-charcoal/90 hover:text-charcoal'
-                    : 'text-secondary-text hover:text-primary-text hover:bg-surface-muted'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-7 h-7 rounded-xl flex items-center justify-center transition-colors ${
-                      isActive
-                        ? isLab
-                          ? 'bg-lavender text-charcoal'
-                          : 'bg-mint/20 text-mint'
-                        : isLab
-                        ? 'bg-lavender/40 text-charcoal'
-                        : 'text-secondary-text'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <span className={isActive ? 'font-semibold text-white' : ''}>{item.label}</span>
-                </div>
-
-                {item.badge && (
-                  <span
-                    className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
-                      isActive
-                        ? isLab
-                          ? 'bg-lavender text-charcoal'
-                          : 'bg-mint text-charcoal'
-                        : isLab
-                        ? 'bg-lavender/40 text-charcoal'
-                        : item.id === 'alerts' && activeAlertCount > 0
-                        ? 'bg-danger text-white'
-                        : 'bg-surface-muted text-secondary-text'
-                    }`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-[18px] tracking-tight text-[#171A18] leading-tight truncate">
+              CoastalSight
+            </span>
+            <span className="text-[10px] font-semibold bg-[#A5F5A6] text-[#171A18] px-1.5 py-0.5 rounded-full">
+              Seasify
+            </span>
+          </div>
+          <span className="text-[11px] font-medium text-[#737A75] leading-tight truncate">
+            Tide & Water-Level Analysis
+          </span>
+        </div>
       </div>
 
-      {/* Footer System Status & Profile */}
-      <div className="pt-3 border-t border-border flex flex-col gap-2">
-        <div className="flex items-center justify-between px-3 py-2 rounded-20 bg-surface-muted text-xs">
+      {/* Navigation Pills */}
+      <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.id}
+              to={item.path}
+              data-testid={`nav-${item.id}`}
+              className={({ isActive }) =>
+                `flex items-center gap-3.5 px-4 py-2.5 rounded-full text-[14px] transition-all duration-150 ${
+                  isActive
+                    ? 'bg-[#A5F5A6] text-[#171A18] font-semibold shadow-sm border border-[#68DD79]/30'
+                    : 'text-[#737A75] hover:text-[#171A18] hover:bg-[#EAEFEC]/70 font-medium'
+                }`
+              }
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{item.name}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* Sidebar Footer System Status */}
+      <div className="pt-4 border-t border-[#D9DEDA]/80 mt-auto px-2">
+        <div className="flex items-center justify-between text-xs text-[#737A75]">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint-strong opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-mint-strong" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#68DD79] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#68DD79]"></span>
             </span>
-            <span className="text-[11px] font-medium text-secondary-text">Engine: Active (DFA)</span>
+            <span className="font-medium text-[#171A18]">NOAA CO-OPS</span>
           </div>
-          <span className="text-[10px] font-mono text-secondary-text font-semibold">94% CONF</span>
-        </div>
-
-        <div className="flex items-center justify-between px-2 py-1">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-lavender flex items-center justify-center text-charcoal font-bold text-xs shadow-sm">
-              EV
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-primary-text leading-tight">
-                Dr. E. Vance
-              </span>
-              <span className="text-[10px] text-secondary-text leading-tight">Chief Oceanographer</span>
-            </div>
-          </div>
-          <Radio className="w-3.5 h-3.5 text-mint-strong" />
+          <span className="font-mono text-[11px] bg-[#EAEFEC] px-2 py-0.5 rounded-full border border-[#D9DEDA]">
+            v1.0
+          </span>
         </div>
       </div>
     </aside>

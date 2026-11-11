@@ -12,6 +12,8 @@ interface AlertState {
   resolveAlert: (id: string) => void;
   dismissAlert: (id: string) => void;
   updateNotificationChannels: (channels: Partial<NotificationChannels>) => void;
+  toggleChannel: (channel: keyof NotificationChannels) => void;
+  toggleQuietHours: () => void;
 }
 
 const DEFAULT_RULES: AlertRule[] = [
@@ -180,6 +182,24 @@ export const useAlertStore = create<AlertState>((set) => ({
   updateNotificationChannels: (channels) => {
     set((state) => ({
       notificationChannels: { ...state.notificationChannels, ...channels },
+    }));
+  },
+
+  toggleChannel: (channel) => {
+    set((state) => ({
+      notificationChannels: {
+        ...state.notificationChannels,
+        [channel]: !state.notificationChannels[channel],
+      },
+    }));
+  },
+
+  toggleQuietHours: () => {
+    set((state) => ({
+      notificationChannels: {
+        ...state.notificationChannels,
+        quietHoursEnabled: !state.notificationChannels.quietHoursEnabled,
+      },
     }));
   },
 }));

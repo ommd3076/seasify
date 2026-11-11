@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import {
   Activity,
   ArrowUpRight,
@@ -10,9 +10,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  Compass,
-  Sliders,
-  Layers,
 } from 'lucide-react';
 import { useStationStore } from '@/stores/stationStore';
 import { useTideDataStore } from '@/stores/tideDataStore';
@@ -26,7 +23,6 @@ export const MonitoringScreen: React.FC = () => {
     events,
     loadStationData,
     selectedTimeRange,
-    isLoading,
   } = useTideDataStore();
 
   useEffect(() => {
@@ -46,10 +42,9 @@ export const MonitoringScreen: React.FC = () => {
   // Compute active condition flags
   const isSurgeCondition = Math.abs(currentResidual) > 0.20;
   const isRapidRateCondition = Math.abs(currentRateOfChange) > 0.20;
-  const isExtremeSurge = Math.abs(currentResidual) > 0.40;
 
   return (
-    <div className="space-y-6">
+    <div data-testid="screen-monitoring" className="space-y-6">
       {/* 4 Metrics Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Metric 1: Current Level Charcoal Card */}

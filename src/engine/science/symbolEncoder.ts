@@ -1,6 +1,8 @@
 import { ConcreteSymbol, EventAlias, ResidualCategory, ThresholdConfig, TrendCategory } from '@/types/automata';
 import { WaterLevelPoint } from '@/types/noaa';
 
+export type { ThresholdConfig };
+
 export const DEFAULT_THRESHOLDS: ThresholdConfig = {
   positiveResidualMeters: 0.20,
   negativeResidualMeters: -0.20,

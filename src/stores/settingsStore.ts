@@ -4,6 +4,7 @@ import { AppSettings, UserRole } from '@/types/settings';
 interface SettingsState {
   settings: AppSettings;
   teamMembers: UserRole[];
+  userRoles: UserRole[];
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   addTeamMember: (member: Omit<UserRole, 'id'>) => void;
   removeTeamMember: (id: string) => void;
@@ -54,6 +55,7 @@ const DEFAULT_TEAM_MEMBERS: UserRole[] = [
 export const useSettingsStore = create<SettingsState>((set) => ({
   settings: DEFAULT_SETTINGS,
   teamMembers: DEFAULT_TEAM_MEMBERS,
+  userRoles: DEFAULT_TEAM_MEMBERS,
 
   updateSettings: (newSettings) => {
     set((state) => ({

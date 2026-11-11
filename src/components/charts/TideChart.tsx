@@ -158,7 +158,7 @@ export const TideChart: React.FC<TideChartProps> = ({
       )}
 
       <div style={{ width: '100%', height }} className="relative select-none">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
           <ComposedChart
             data={data}
             margin={{ top: 12, right: 16, left: -10, bottom: 8 }}

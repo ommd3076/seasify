@@ -1,22 +1,13 @@
 import React from 'react';
 import {
-  Layers,
   Workflow,
-  Sparkles,
   ArrowRight,
-  ShieldCheck,
-  Activity,
-  AlertTriangle,
-  Clock,
-  Compass,
 } from 'lucide-react';
-import { useAutomataStore } from '@/stores/automataStore';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { RadialGauge } from '@/components/charts/RadialGauge';
 import { PREDEFINED_PATTERNS } from '@/engine/automata/predefinedRules';
 
 export const PatternsScreen: React.FC = () => {
-  const { patterns } = useAutomataStore();
   const { navigateToAutomataLab } = useNavigationStore();
 
   const patternDistribution = [
@@ -32,7 +23,7 @@ export const PatternsScreen: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div data-testid="screen-patterns" className="space-y-6">
       {/* Top Grid: Coverage Gauge, Active Detections Charcoal Card, Most Common Patterns */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Card 1: Pattern Coverage Gauge Card (4 cols) */}

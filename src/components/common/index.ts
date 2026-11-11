@@ -1,5 +1,13 @@
 export { Badge } from './Badge';
+export type { BadgeProps, BadgeVariant } from './Badge';
 export { Button } from './Button';
-export { Card, MetricCard } from './Card';
+export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
+export { Card, MetricCard as CardMetricCard } from './Card';
+export type { CardProps } from './Card';
+export { MetricCard } from './MetricCard';
+export type { MetricCardProps, MetricCardVariant } from './MetricCard';
 export { Dropdown } from './Dropdown';
+export type { DropdownProps, DropdownOption } from './Dropdown';
+export { DateRangePicker, PRESET_RANGES } from './DateRangePicker';
+export type { DateRangePickerProps } from './DateRangePicker';
 export { Modal } from './Modal';

@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   CSS CUSTOM PROPERTIES (DESIGN TOKENS)
+   ========================================================================== */
 :root {
   --background: #DBE2DB;
   --surface: #F7F9F6;
@@ -13,18 +16,47 @@
   --mint-strong: #68DD79;
   --lavender: #C5A8F8;
   --border: #D9DEDA;
+
+  --radius-panel: 28px;
+  --radius-card: 20px;
+  --radius-subpanel: 16px;
+  --radius-pill: 9999px;
 }
 
-body {
-  background-color: var(--background);
-  color: var(--text-primary);
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
+/* ==========================================================================
+   BASE STYLING
+   ========================================================================== */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #DBE2DB;
+    color: #171A18;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: #DBE2DB;
+    color: #171A18;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-/* Custom scrollbar */
+/* ==========================================================================
+   CUSTOM SUBTLE SCROLLBAR
+   ========================================================================== */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -35,15 +67,125 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C4CCC5;
+  background-color: #D9DEDA;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #A9B3AA;
+  background-color: #B5BEB6;
 }
 
-/* Leaflet map container fix */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #D9DEDA transparent;
+}
+
+/* ==========================================================================
+   REUSABLE COMPONENT UTILITIES
+   ========================================================================== */
+@layer components {
+  /* Outer Floating Card Panel (e.g. Sidebar container, Screen Main Panels) */
+  .card-panel {
+    @apply bg-surface border border-border rounded-panel shadow-panel;
+  }
+
+  /* Inner Card / Metric Sub-Panel */
+  .card-inner {
+    @apply bg-surface border border-border rounded-card shadow-card;
+  }
+
+  /* Dark Charcoal Hero Metric Card */
+  .card-charcoal {
+    @apply bg-charcoal text-white rounded-card shadow-charcoal;
+  }
+
+  /* Inset Container / Table Header / Muted Section */
+  .card-muted {
+    @apply bg-surface-muted border border-border rounded-card;
+  }
+
+  /* Filter Pill Dropdowns (Header controls: "All Stations ⌄", "Last 30 Days ⌄") */
+  .filter-pill {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-muted text-text-primary text-sm font-medium rounded-full border border-border shadow-sm transition-colors duration-150 cursor-pointer select-none;
+  }
+
+  /* Sidebar Navigation Items */
+  .nav-pill {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-150 cursor-pointer select-none;
+  }
+
+  .nav-pill-active {
+    @apply bg-mint text-text-primary font-semibold shadow-sm border border-mint-strong/30;
+  }
+
+  .nav-pill-inactive {
+    @apply text-text-secondary hover:text-text-primary hover:bg-surface-muted;
+  }
+
+  /* Action Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-mint hover:bg-mint-strong text-text-primary font-semibold rounded-full shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border border-mint-strong/50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-surface hover:bg-surface-muted text-text-primary font-medium rounded-full border border-border shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-charcoal {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-charcoal hover:bg-charcoal-light text-white font-medium rounded-full shadow-sm transition-all duration-150 cursor-pointer border border-charcoal-border;
+  }
+
+  /* Status Badges */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border;
+  }
+
+  .badge-normal {
+    @apply bg-mint/30 text-[#156024] border-mint-strong/40;
+  }
+
+  .badge-elevated {
+    @apply bg-lavender/30 text-[#5B32A8] border-lavender/60;
+  }
+
+  .badge-low_tide {
+    @apply bg-surface-muted text-[#475569] border-[#CBD5E1];
+  }
+
+  .badge-warning {
+    @apply bg-[#FFF3D6] text-[#8C5E00] border-[#F0D590];
+  }
+
+  .badge-maintenance {
+    @apply bg-surface-muted text-text-secondary border-border;
+  }
+
+  .badge-resolved {
+    @apply bg-surface-muted text-text-secondary border-border;
+  }
+
+  .badge-open {
+    @apply bg-mint text-text-primary border-mint-strong/50;
+  }
+
+  .badge-high {
+    @apply bg-lavender/40 text-[#171A18] border-lavender;
+  }
+
+  .badge-moderate {
+    @apply bg-[#FEF3C7] text-[#92400E] border-[#FDE68A];
+  }
+
+  .badge-low {
+    @apply bg-[#DCFCE7] text-[#166534] border-[#BBF7D0];
+  }
+
+  .badge-neutral {
+    @apply bg-surface-muted text-text-primary border-border;
+  }
+}
+
+/* Leaflet map container */
 .leaflet-container {
   width: 100%;
   height: 100%;
