@@ -1,268 +1,483 @@
 import React, { useState } from 'react';
 import {
   UploadCloud,
-  FileText,
-  CheckCircle2,
-  AlertCircle,
-  Database,
-  ArrowRight,
-  RefreshCw,
-  Table as TableIcon,
+  Check,
+  MoreVertical,
   Activity,
+  Code,
+  Compass,
+  FileSpreadsheet,
 } from 'lucide-react';
-import Button from '../components/common/Button';
-import Badge from '../components/common/Badge';
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 export const UploadScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'upload' | 'import'>('upload');
-  const [dragOver, setDragOver] = useState(false);
-  const [selectedFileName, setSelectedFileName] = useState<string | null>('noaa_harbor_point_nov2024.csv');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState<'table' | 'chart'>('table');
+  const [uploadProgress, setUploadProgress] = useState(72);
+  const [isCanceled, setIsCanceled] = useState(false);
 
-  const previewRows = [
-    { timestamp: '2024-11-12 00:00:00', waterLevel: 1.42, predicted: 1.38, residual: 0.04, flag: 'Verified' },
-    { timestamp: '2024-11-12 01:00:00', waterLevel: 1.68, predicted: 1.55, residual: 0.13, flag: 'Verified' },
-    { timestamp: '2024-11-12 02:00:00', waterLevel: 2.15, predicted: 1.72, residual: 0.43, flag: 'Surge' },
-    { timestamp: '2024-11-12 03:00:00', waterLevel: 2.44, predicted: 1.84, residual: 0.60, flag: 'Extreme' },
-    { timestamp: '2024-11-12 04:00:00', waterLevel: 2.38, predicted: 1.80, residual: 0.58, flag: 'Extreme' },
+  const previewTableData = [
+    { timestamp: '2023-01-01 00:00', waterLevel: 0.42, station: 'Harbor Point', flag: 0 },
+    { timestamp: '2023-01-01 00:10', waterLevel: 0.48, station: 'Harbor Point', flag: 0 },
+    { timestamp: '2023-01-01 00:20', waterLevel: 0.55, station: 'Harbor Point', flag: 0 },
+    { timestamp: '2023-01-01 00:30', waterLevel: 0.60, station: 'Harbor Point', flag: 0 },
+    { timestamp: '2023-01-01 00:40', waterLevel: 0.64, station: 'Harbor Point', flag: 0 },
   ];
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSelectedFileName(e.dataTransfer.files[0].name);
-    }
-  };
-
-  const handleProcessFile = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setImportStatus('Successfully parsed 720 time-series rows. Ready for automata ingestion.');
-    }, 1200);
-  };
+  const previewChartData = [
+    { day: 'Jan 1', level: 0.2 },
+    { day: 'Jan 2', level: 1.4 },
+    { day: 'Jan 3', level: -0.8 },
+    { day: 'Jan 4', level: 1.8 },
+    { day: 'Jan 5', level: -1.2 },
+    { day: 'Jan 6', level: 2.1 },
+    { day: 'Jan 7', level: -1.1 },
+    { day: 'Jan 8', level: 1.9 },
+    { day: 'Jan 9', level: -0.6 },
+    { day: 'Jan 10', level: 2.3 },
+    { day: 'Jan 11', level: -0.4 },
+  ];
 
   return (
     <div data-testid="screen-upload" className="space-y-6">
-      {/* Ingestion Type Tabs Header */}
-      <div className="bg-surface rounded-panel border border-border shadow-panel p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-primary-text">Data Ingestion & Historical Import</h2>
-            <p className="text-xs text-secondary-text mt-0.5">
-              Add external tide telemetry files or connect to public coastal oceanographic APIs
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1.5 bg-surface-muted p-1 rounded-full border border-border">
+      {/* Top Grid: Upload Area & Source Connectors */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Top-Left: Drop Area (8 cols) */}
+        <div className="lg:col-span-8 bg-surface rounded-[28px] border border-border shadow-panel p-6 sm:p-7 flex flex-col justify-between">
+          {/* Tabs */}
+          <div className="flex items-center gap-2 mb-6">
             <button
               onClick={() => setActiveTab('upload')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
                 activeTab === 'upload'
-                  ? 'bg-charcoal text-white shadow-sm'
+                  ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
                   : 'text-secondary-text hover:text-primary-text'
               }`}
             >
-              Upload Observation Files
+              <UploadCloud className="w-4 h-4" />
+              <span>Upload Observation Files</span>
             </button>
+
             <button
               onClick={() => setActiveTab('import')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
                 activeTab === 'import'
-                  ? 'bg-charcoal text-white shadow-sm'
+                  ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
                   : 'text-secondary-text hover:text-primary-text'
               }`}
             >
-              Import Historical Tide Data
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Import Historical Tide Data</span>
+            </button>
+          </div>
+
+          {/* Dashed Drag & Drop Box */}
+          <div className="border-2 border-dashed border-[#68DD79] rounded-[24px] bg-[#F2FAF4] p-8 text-center flex flex-col items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-[#DCFADC] text-[#227C34] flex items-center justify-center mb-3">
+              <UploadCloud className="w-7 h-7" />
+            </div>
+
+            <h3 className="text-lg font-bold text-primary-text">
+              Drag & drop files here
+            </h3>
+            <p className="text-xs text-secondary-text mt-1">
+              Upload tide, water-level, or coastal observation files
+            </p>
+            <p className="text-[11px] text-secondary-text mt-0.5 mb-5">
+              Supports CSV, TXT, NetCDF (.nc), and HDF5 (.h5) • up to 5 GB
+            </p>
+
+            <label className="px-5 py-2.5 rounded-full border border-border bg-white text-xs font-bold text-primary-text hover:bg-surface-muted transition shadow-xs cursor-pointer flex items-center gap-2">
+              <FileSpreadsheet className="w-4 h-4 text-secondary-text" />
+              <span>Browse Files</span>
+              <input type="file" className="hidden" accept=".csv,.txt,.nc,.h5" />
+            </label>
+          </div>
+        </div>
+
+        {/* Top-Right: Source Connectors (4 cols) */}
+        <div className="lg:col-span-4 bg-surface rounded-[28px] border border-border shadow-panel p-6 sm:p-7 flex flex-col justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-primary-text leading-tight">
+              Source Connectors
+            </h3>
+            <p className="text-xs text-secondary-text mt-0.5 mb-4">
+              Bring in data from trusted sources
+            </p>
+
+            <div className="space-y-3">
+              {/* Connector 1 */}
+              <div className="flex items-center justify-between p-2.5 rounded-20 bg-surface-muted/60 border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+                    <Compass className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-primary-text">
+                      NDBC (NOAA)
+                    </div>
+                    <div className="text-[11px] text-secondary-text">
+                      Tide & water-level data
+                    </div>
+                  </div>
+                </div>
+                <button className="px-3 py-1 rounded-full border border-border text-xs font-bold text-primary-text hover:bg-white transition">
+                  Connect
+                </button>
+              </div>
+
+              {/* Connector 2 */}
+              <div className="flex items-center justify-between p-2.5 rounded-20 bg-surface-muted/60 border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#EBE0FE] text-[#784FD8] flex items-center justify-center shrink-0">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-primary-text">
+                      NOAA CO-OPS
+                    </div>
+                    <div className="text-[11px] text-secondary-text">
+                      Tide stations & datums
+                    </div>
+                  </div>
+                </div>
+                <button className="px-3 py-1 rounded-full border border-border text-xs font-bold text-primary-text hover:bg-white transition">
+                  Connect
+                </button>
+              </div>
+
+              {/* Connector 3 */}
+              <div className="flex items-center justify-between p-2.5 rounded-20 bg-surface-muted/60 border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+                    <Compass className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-primary-text">
+                      Copernicus Marine
+                    </div>
+                    <div className="text-[11px] text-secondary-text">
+                      Coastal water level (CMEMS)
+                    </div>
+                  </div>
+                </div>
+                <button className="px-3 py-1 rounded-full border border-border text-xs font-bold text-primary-text hover:bg-white transition">
+                  Connect
+                </button>
+              </div>
+
+              {/* Connector 4 */}
+              <div className="flex items-center justify-between p-2.5 rounded-20 bg-surface-muted/60 border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#EBE0FE] text-[#784FD8] flex items-center justify-center shrink-0">
+                    <Code className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-primary-text">
+                      Custom URL / API
+                    </div>
+                    <div className="text-[11px] text-secondary-text">
+                      Import from an API or data feed
+                    </div>
+                  </div>
+                </div>
+                <button className="px-3 py-1 rounded-full border border-border text-xs font-bold text-primary-text hover:bg-white transition">
+                  Connect
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Middle: File Progress Card */}
+      {!isCanceled && (
+        <div className="bg-surface rounded-[24px] border border-border shadow-panel p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+              <FileSpreadsheet className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="font-bold text-sm text-primary-text truncate">
+                HarborPoint_2023-2024_tide.csv
+              </div>
+              <div className="text-xs text-secondary-text mt-0.5">
+                Uploading and validating...
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 w-full md:w-auto flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-center justify-between text-xs text-secondary-text mb-1.5 font-medium">
+                <span>2.9 GB of 4.0 GB • ~1 min remaining</span>
+                <span className="font-bold text-primary-text">{uploadProgress}%</span>
+              </div>
+              <div className="w-full h-2.5 bg-surface-muted rounded-full overflow-hidden flex">
+                <div
+                  className="bg-[#68DD79] h-full rounded-full transition-all"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+                <div className="bg-[#C5A8F8] h-full flex-1" />
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsCanceled(true)}
+              className="px-3.5 py-1.5 rounded-full border border-border text-xs font-semibold text-secondary-text hover:text-primary-text hover:bg-surface-muted transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Lower Split: Recent Uploads & File Validation */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Lower Left: Recent Uploads (7 cols) */}
+        <div className="lg:col-span-7 bg-surface rounded-[28px] border border-border shadow-panel p-6 sm:p-7">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-primary-text leading-tight">
+                Recent Uploads
+              </h3>
+              <p className="text-xs text-secondary-text mt-0.5">
+                Your latest data ingestions
+              </p>
+            </div>
+
+            <button className="px-3.5 py-1.5 rounded-full border border-border text-xs font-semibold text-primary-text hover:bg-surface-muted transition flex items-center gap-1">
+              <span>View All</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <div className="space-y-2.5">
+            {[
+              {
+                file: 'HarborPoint_2023-2024_tide.csv',
+                size: '4.0 GB',
+                time: '2 min ago',
+                status: 'Processing',
+                statusColor: 'bg-[#EBE0FE] text-[#784FD8]',
+              },
+              {
+                file: 'Bayview_Inlet_obs_2024.nc',
+                size: '1.2 GB',
+                time: '1 hr ago',
+                status: 'Validated',
+                statusColor: 'bg-[#DCFADC] text-[#156024]',
+              },
+              {
+                file: 'EastJetty_2019-2023_tide.csv',
+                size: '586 MB',
+                time: '3 hr ago',
+                status: 'Validated',
+                statusColor: 'bg-[#DCFADC] text-[#156024]',
+              },
+              {
+                file: 'CoastalNetwork_2020-2022.h5',
+                size: '2.1 GB',
+                time: 'Yesterday',
+                status: 'Issues (2)',
+                statusColor: 'bg-[#EBE0FE] text-[#784FD8]',
+              },
+            ].map((u) => (
+              <div
+                key={u.file}
+                className="flex items-center justify-between p-3 rounded-20 bg-surface-muted/40 border border-border/80"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileSpreadsheet className="w-4 h-4 text-secondary-text shrink-0" />
+                  <span className="font-bold text-xs text-primary-text truncate">
+                    {u.file}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-4 shrink-0">
+                  <span className="text-xs text-secondary-text font-mono">
+                    {u.size}
+                  </span>
+                  <span className="text-xs text-secondary-text hidden sm:inline">
+                    {u.time}
+                  </span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${u.statusColor}`}>
+                    {u.status}
+                  </span>
+                  <MoreVertical className="w-4 h-4 text-secondary-text cursor-pointer" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Lower Right: File Validation Checklist (5 cols) */}
+        <div className="lg:col-span-5 bg-surface rounded-[28px] border border-border shadow-panel p-6 sm:p-7 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+                <Check className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-primary-text leading-tight">
+                  File Validation
+                </h3>
+                <p className="text-xs text-secondary-text mt-0.5 font-mono">
+                  HarborPoint_2023-2024_tide.csv
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              <div className="flex items-center justify-between text-xs py-1 border-b border-border/60">
+                <div className="flex items-center gap-2 text-primary-text">
+                  <span className="text-[#359D45] font-bold">✔</span>
+                  <span>File format</span>
+                </div>
+                <span className="text-secondary-text font-mono">CSV (valid)</span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs py-1 border-b border-border/60">
+                <div className="flex items-center gap-2 text-primary-text">
+                  <span className="text-[#359D45] font-bold">✔</span>
+                  <span>Required columns</span>
+                </div>
+                <span className="text-secondary-text font-mono">timestamp, water_level ✔</span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs py-1 border-b border-border/60">
+                <div className="flex items-center gap-2 text-primary-text">
+                  <span className="text-[#359D45] font-bold">✔</span>
+                  <span>Time range</span>
+                </div>
+                <span className="text-secondary-text font-mono">2023-01-01 — 2024-12-31 ✔</span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs py-1 border-b border-border/60">
+                <div className="flex items-center gap-2 text-primary-text">
+                  <span className="text-[#359D45] font-bold">✔</span>
+                  <span>Data completeness</span>
+                </div>
+                <span className="text-secondary-text font-mono">99.6% (0.4% missing) ✔</span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs py-1">
+                <div className="flex items-center gap-2 text-primary-text">
+                  <span className="text-[#359D45] font-bold">✔</span>
+                  <span>Value range (water level)</span>
+                </div>
+                <span className="text-secondary-text font-mono">-2.38 to +2.71 m ✔</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom: Dataset Preview Card */}
+      <div className="bg-surface rounded-[28px] border border-border shadow-panel p-6 sm:p-7">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+              <svg
+                className="w-5 h-5 text-[#227C34]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              >
+                <path d="M2 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+                <path d="M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-primary-text leading-tight">
+                Dataset Preview
+              </h3>
+              <p className="text-xs text-secondary-text mt-0.5">
+                HarborPoint_2023-2024_tide.csv • 8,761,920 rows (2 years)
+              </p>
+            </div>
+          </div>
+
+          {/* Table / Chart Toggle */}
+          <div className="flex items-center gap-1.5 p-1 rounded-full bg-surface-muted border border-border">
+            <button
+              onClick={() => setPreviewMode('table')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+                previewMode === 'table'
+                  ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
+                  : 'text-secondary-text hover:text-primary-text'
+              }`}
+            >
+              ⊞ Table
+            </button>
+            <button
+              onClick={() => setPreviewMode('chart')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+                previewMode === 'chart'
+                  ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
+                  : 'text-secondary-text hover:text-primary-text'
+              }`}
+            >
+              ~ Chart
             </button>
           </div>
         </div>
 
-        {/* Tab 1: Upload Dropzone */}
-        {activeTab === 'upload' ? (
-          <div className="space-y-6">
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-panel p-8 text-center transition-all ${
-                dragOver
-                  ? 'border-mint-strong bg-[#A5F5A6]/10'
-                  : 'border-border bg-surface-muted/40 hover:bg-surface-muted/60'
-              }`}
-            >
-              <div className="w-14 h-14 rounded-2xl bg-[#EAEFEC] border border-border flex items-center justify-center mx-auto mb-3 text-mint-strong">
-                <UploadCloud className="w-7 h-7" />
-              </div>
-              <h3 className="text-base font-bold text-primary-text mb-1">
-                Drag and drop your observation dataset
-              </h3>
-              <p className="text-xs text-secondary-text max-w-md mx-auto mb-4">
-                Supported formats: CSV, TSV, or JSON with timestamp, observed water level, and optional predicted tides.
-              </p>
-
-              <div className="flex items-center justify-center gap-3">
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".csv,.tsv,.json"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setSelectedFileName(e.target.files[0].name);
-                      }
-                    }}
-                  />
-                  <span className="btn-secondary text-xs">Browse Local Files</span>
-                </label>
-              </div>
-
-              {selectedFileName && (
-                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-border text-xs font-mono text-primary-text">
-                  <FileText className="w-3.5 h-3.5 text-mint-strong" />
-                  <span>{selectedFileName}</span>
-                  <Badge variant="normal" size="sm">Ready</Badge>
-                </div>
-              )}
-            </div>
-
-            {/* Validation Checklist & Parser Trigger */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-card bg-surface-muted border border-border">
-                <div className="flex items-center gap-2 mb-1 text-mint-dark">
-                  <CheckCircle2 className="w-4 h-4 text-mint-strong" />
-                  <span className="text-xs font-bold text-primary-text">Timestamp Parsing</span>
-                </div>
-                <p className="text-[11px] text-secondary-text">ISO 8601 & UTC offsets supported (6-minute or 1-hour cadence)</p>
-              </div>
-
-              <div className="p-4 rounded-card bg-surface-muted border border-border">
-                <div className="flex items-center gap-2 mb-1 text-mint-dark">
-                  <CheckCircle2 className="w-4 h-4 text-mint-strong" />
-                  <span className="text-xs font-bold text-primary-text">Datum Standardization</span>
-                </div>
-                <p className="text-[11px] text-secondary-text">MLLW, MSL, and NAVD88 unit harmonization (Meters / Feet)</p>
-              </div>
-
-              <div className="p-4 rounded-card bg-surface-muted border border-border">
-                <div className="flex items-center gap-2 mb-1 text-mint-dark">
-                  <CheckCircle2 className="w-4 h-4 text-mint-strong" />
-                  <span className="text-xs font-bold text-primary-text">Residual Pre-computation</span>
-                </div>
-                <p className="text-[11px] text-secondary-text">Automatic cubic spline interpolation of non-tidal residuals</p>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="text-xs text-secondary-text">
-                {importStatus ? (
-                  <span className="font-semibold text-mint-dark flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-mint-strong" />
-                    {importStatus}
-                  </span>
-                ) : (
-                  <span>Ready to parse dataset and generate automata symbol stream</span>
-                )}
-              </div>
-
-              <Button
-                variant="primary"
-                onClick={handleProcessFile}
-                isLoading={isProcessing}
-                disabled={!selectedFileName}
-                icon={<ArrowRight className="w-4 h-4" />}
-              >
-                Ingest & Process Telemetry
-              </Button>
-            </div>
-          </div>
-        ) : (
-          /* Tab 2: Historical API Connector */
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {[
-                {
-                  name: 'NOAA CO-OPS API',
-                  desc: 'National Ocean Service water levels & harmonic predictions across 300+ US coastal stations',
-                  badge: 'Direct CORS',
-                  color: 'border-mint-strong',
-                },
-                {
-                  name: 'NDBC Buoy Network',
-                  desc: 'National Data Buoy Center oceanographic wave period, atmospheric pressure, and offshore tides',
-                  badge: 'Public API',
-                  color: 'border-lavender',
-                },
-                {
-                  name: 'Copernicus Marine',
-                  desc: 'European Copernicus sea level reanalysis and global coastal altimetry observations',
-                  badge: 'REST Auth',
-                  color: 'border-border',
-                },
-              ].map((conn) => (
-                <div key={conn.name} className={`p-5 rounded-panel bg-surface border ${conn.color} shadow-sm flex flex-col justify-between`}>
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-sm text-primary-text">{conn.name}</span>
-                      <Badge variant="normal" size="sm">{conn.badge}</Badge>
-                    </div>
-                    <p className="text-xs text-secondary-text">{conn.desc}</p>
-                  </div>
-                  <Button variant="secondary" size="sm" className="mt-4 w-full">
-                    Connect Provider
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Dataset Preview Table */}
-      <div className="bg-surface rounded-panel border border-border shadow-panel p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <TableIcon className="w-4 h-4 text-secondary-text" />
-            <h3 className="text-base font-bold text-primary-text">Parsed Telemetry Preview</h3>
-          </div>
-          <span className="text-xs font-mono text-secondary-text">First 5 records displayed</span>
-        </div>
-
-        <div className="overflow-x-auto rounded-card border border-border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-surface-muted text-secondary-text text-xs uppercase font-semibold border-b border-border">
-              <tr>
-                <th className="py-2.5 px-4">Timestamp (UTC)</th>
-                <th className="py-2.5 px-4">Observed Level (m)</th>
-                <th className="py-2.5 px-4">Predicted Harmonic (m)</th>
-                <th className="py-2.5 px-4">Residual R(t)</th>
-                <th className="py-2.5 px-4">Quality / Flag</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border font-mono text-xs">
-              {previewRows.map((r, i) => (
-                <tr key={i} className="hover:bg-surface-muted/40 transition">
-                  <td className="py-2.5 px-4 text-primary-text">{r.timestamp}</td>
-                  <td className="py-2.5 px-4 font-semibold text-primary-text">{r.waterLevel.toFixed(2)}</td>
-                  <td className="py-2.5 px-4 text-secondary-text">{r.predicted.toFixed(2)}</td>
-                  <td className={`py-2.5 px-4 font-bold ${r.residual > 0.2 ? 'text-lavender-dark' : 'text-mint-dark'}`}>
-                    +{r.residual.toFixed(2)}
-                  </td>
-                  <td className="py-2.5 px-4 font-sans">
-                    <Badge variant={r.flag === 'Extreme' ? 'elevated' : 'normal'} size="sm">
-                      {r.flag}
-                    </Badge>
-                  </td>
+        {/* Preview Content: Table on Left & Chart on Right */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center pt-2">
+          {/* Table (6 cols) */}
+          <div className="lg:col-span-6 overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-border/80 text-secondary-text">
+                  <th className="pb-2 font-semibold">timestamp (UTC)</th>
+                  <th className="pb-2 font-semibold">water_level (m)</th>
+                  <th className="pb-2 font-semibold">station</th>
+                  <th className="pb-2 font-semibold">quality_flag</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border/60 font-mono">
+                {previewTableData.map((row, i) => (
+                  <tr key={i} className="hover:bg-surface-muted/40 transition">
+                    <td className="py-2.5 text-secondary-text">{row.timestamp}</td>
+                    <td className="py-2.5 font-bold text-primary-text">{row.waterLevel.toFixed(2)}</td>
+                    <td className="py-2.5 text-secondary-text font-sans">{row.station}</td>
+                    <td className="py-2.5 text-secondary-text">{row.flag}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Chart Preview (6 cols) */}
+          <div className="lg:col-span-6 pl-0 lg:pl-4 border-t lg:border-t-0 lg:border-l border-border/80">
+            <div className="text-xs font-bold text-primary-text mb-2">
+              Water Level (Harbor Point)
+            </div>
+            <div className="h-40 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={previewChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="uploadLavender" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#C5A8F8" stopOpacity={0.6} />
+                      <stop offset="95%" stopColor="#C5A8F8" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="day" stroke="#737A75" tick={{ fill: '#737A75', fontSize: 10 }} />
+                  <YAxis domain={[-2.8, 2.8]} ticks={[-2.8, -1.4, 0.0, 1.4, 2.8]} stroke="#737A75" tick={{ fill: '#737A75', fontSize: 10 }} unit="m" />
+                  <Area type="monotone" dataKey="level" stroke="#6B21A8" strokeWidth={2} fillOpacity={1} fill="url(#uploadLavender)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,228 +1,392 @@
 import React, { useState } from 'react';
 import {
-  FileText,
   Download,
-  Calendar,
-  Filter,
-  BarChart2,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  FileSpreadsheet,
+  MoreHorizontal,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Cell,
   PieChart,
   Pie,
+  Cell,
+  Area,
 } from 'recharts';
-import Button from '../components/common/Button';
-import Badge from '../components/common/Badge';
 
 export const ReportsScreen: React.FC = () => {
-  const [selectedReportPeriod, setSelectedReportPeriod] = useState<'30d' | '90d' | '12m'>('30d');
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
-  const monthlyAnomalyData = [
-    { month: 'Jun', events: 14, surgeHours: 28, meanResidual: 0.18 },
-    { month: 'Jul', events: 9, surgeHours: 16, meanResidual: 0.12 },
-    { month: 'Aug', events: 12, surgeHours: 22, meanResidual: 0.15 },
-    { month: 'Sep', events: 21, surgeHours: 46, meanResidual: 0.32 },
-    { month: 'Oct', events: 34, surgeHours: 78, meanResidual: 0.44 },
-    { month: 'Nov', events: 28, surgeHours: 62, meanResidual: 0.38 },
-  ];
-
-  const stationComparisonData = [
-    { station: 'The Battery (NY)', surges: 32, blowouts: 8, avgResidual: 0.34 },
-    { station: 'San Francisco (CA)', surges: 18, blowouts: 12, avgResidual: 0.22 },
-    { station: 'Key West (FL)', surges: 26, blowouts: 5, avgResidual: 0.29 },
-    { station: 'Boston (MA)', surges: 38, blowouts: 14, avgResidual: 0.41 },
-    { station: 'Galveston (TX)', surges: 22, blowouts: 7, avgResidual: 0.25 },
-  ];
-
-  const eventDistributionData = [
-    { name: 'Sustained Surge', value: 44, color: '#68DD79' },
-    { name: 'Rapid Rise', value: 24, color: '#C5A8F8' },
-    { name: 'Abnormal Recovery', value: 16, color: '#A5F5A6' },
-    { name: 'Low Blowout', value: 10, color: '#FBBF24' },
-    { name: 'Oscillatory', value: 6, color: '#F87171' },
-  ];
-
-  const reportHistory = [
-    {
-      id: 'REP-2024-11-A',
-      title: 'November 2024 Coastal Telemetry & Surge Assessment',
-      period: 'Nov 01 - Nov 30, 2024',
-      stations: '13 Stations',
-      type: 'Executive Monthly',
-      generated: '2024-11-12 04:00 UTC',
-      status: 'Generated',
-      fileSize: '2.4 MB',
-    },
-    {
-      id: 'REP-2024-10-B',
-      title: 'October 2024 Nor’easter Storm Impact & Automata Trace',
-      period: 'Oct 15 - Oct 22, 2024',
-      stations: 'Atlantic Coast (5)',
-      type: 'Extreme Event Audit',
-      generated: '2024-10-25 11:30 UTC',
-      status: 'Generated',
-      fileSize: '4.8 MB',
-    },
-    {
-      id: 'REP-2024-Q3-SUMMARY',
-      title: 'Q3 2024 Network-Wide Anomaly Recognition Report',
-      period: 'Jul 01 - Sep 30, 2024',
-      stations: 'All Active (13)',
-      type: 'Quarterly Scientific',
-      generated: '2024-10-02 09:15 UTC',
-      status: 'Archived',
-      fileSize: '8.1 MB',
-    },
-    {
-      id: 'REP-2024-09-GAP',
-      title: 'September 2024 Sensor Quality & Data Gap Diagnostic',
-      period: 'Sep 01 - Sep 30, 2024',
-      stations: 'Gulf & Pacific (8)',
-      type: 'QA & Compliance',
-      generated: '2024-10-01 16:40 UTC',
-      status: 'Archived',
-      fileSize: '1.9 MB',
-    },
-  ];
-
-  const handleExport = (reportId: string, format: 'PDF' | 'CSV') => {
-    setDownloadSuccess(`${format} download started for ${reportId}`);
+  const handleExport = (reportName: string, format: 'PDF' | 'CSV') => {
+    setDownloadSuccess(`Exporting ${reportName} as ${format}...`);
     setTimeout(() => setDownloadSuccess(null), 3000);
   };
 
+  // Key Trends dual-axis time-series data (Nov 1 - Nov 29)
+  const trendsData = [
+    { date: 'Nov 1', waterLevel: 2.15, anomaly: 1.82 },
+    { date: 'Nov 5', waterLevel: 2.10, anomaly: 1.80 },
+    { date: 'Nov 9', waterLevel: 2.38, anomaly: 2.10 },
+    { date: 'Nov 13', waterLevel: 2.25, anomaly: 1.78 },
+    { date: 'Nov 17', waterLevel: 2.30, anomaly: 1.95 },
+    { date: 'Nov 21', waterLevel: 2.62, anomaly: 1.85 },
+    { date: 'Nov 25', waterLevel: 2.35, anomaly: 1.75 },
+    { date: 'Nov 29', waterLevel: 2.45, anomaly: 1.92 },
+  ];
+
+  // Station Comparison diverging bar data
+  const comparisonData = [
+    { station: 'Harbor Point', delta: 0.42, isPositive: true },
+    { station: 'Bayview Inlet', delta: -0.36, isPositive: false },
+    { station: 'East Jetty', delta: 0.51, isPositive: true },
+    { station: 'Lighthouse', delta: 0.19, isPositive: true },
+    { station: 'Cedar Beach', delta: -0.21, isPositive: false },
+  ];
+
+  // Donut chart distribution data
+  const distributionData = [
+    { name: 'High tide events', count: 58, pct: '60.4%', color: '#A5F5A6' },
+    { name: 'Low tide events', count: 27, pct: '28.1%', color: '#C5A8F8' },
+    { name: 'Anomaly events', count: 11, pct: '11.5%', color: '#EAEFEC' },
+  ];
+
   return (
     <div data-testid="screen-reports" className="space-y-6">
-      {/* Download Alert Toast */}
+      {/* Toast */}
       {downloadSuccess && (
         <div className="bg-[#A5F5A6] text-[#171A18] px-4 py-2.5 rounded-card border border-[#68DD79] flex items-center justify-between shadow-sm animate-in fade-in duration-200">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-[#156024]" />
-            <span className="text-sm font-semibold">{downloadSuccess}</span>
-          </div>
+          <span className="text-sm font-semibold">{downloadSuccess}</span>
           <button onClick={() => setDownloadSuccess(null)} className="text-xs font-bold px-2">
             ✕
           </button>
         </div>
       )}
 
-      {/* Top 2x2 Analytics Grid */}
+      {/* Top 2x2 Modular Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Card 1: Monthly Anomaly Summary (Charcoal Card, 7 cols) */}
-        <div className="lg:col-span-7 bg-charcoal text-white rounded-panel p-6 sm:p-7 border border-[#383838] shadow-panel flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#68DD79] animate-pulse" />
-                <h3 className="text-lg font-bold text-white">Monthly Anomaly Summary</h3>
-              </div>
-              <div className="flex items-center gap-1.5 bg-[#2E2E2E] p-1 rounded-full border border-[#404040]">
-                {(['30d', '90d', '12m'] as const).map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => setSelectedReportPeriod(period)}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
-                      selectedReportPeriod === period
-                        ? 'bg-[#68DD79] text-[#171A18]'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    {period.toUpperCase()}
-                  </button>
-                ))}
-              </div>
+        {/* Card 1: Monthly Anomaly Summary (Charcoal Card, 6 cols) */}
+        <div className="lg:col-span-6 bg-[#242424] text-white rounded-[28px] p-6 sm:p-7 border border-[#383838] shadow-panel flex flex-col justify-between min-h-[300px]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-white leading-tight">
+                Monthly Anomaly Summary
+              </h3>
+              <p className="text-xs text-[#9CA3AF] mt-0.5">
+                Water-level anomalies across all stations
+              </p>
             </div>
-            <p className="text-xs text-gray-400 mb-4">
-              Total recognized surge events and cumulative hours exceeding astronomical baseline
-            </p>
 
-            <div className="h-56 w-full mt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyAnomalyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" vertical={false} />
-                  <XAxis dataKey="month" stroke="#737A75" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
-                  <YAxis stroke="#737A75" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1E1E1E',
-                      borderColor: '#404040',
-                      borderRadius: '12px',
-                      color: '#fff',
-                    }}
-                  />
-                  <Bar dataKey="surgeHours" name="Surge Hours" fill="#68DD79" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="events" name="Event Count" fill="#C5A8F8" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="px-3.5 py-1.5 rounded-full bg-[#333333] border border-[#444444] text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer">
+              <span>Monthly</span>
+              <span className="text-[10px] text-gray-400">⌄</span>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-[#383838] flex items-center justify-between text-xs text-gray-400 mt-2">
-            <span>Peak Month: October (78 hrs)</span>
-            <span className="font-mono text-[#68DD79]">Cumulative: 252 hrs</span>
+          <div className="flex items-end justify-between pt-4">
+            <div>
+              <span className="text-xs text-[#9CA3AF] font-medium block">
+                Total anomalies
+              </span>
+              <div className="text-5xl font-black font-sans text-white tracking-tight mt-1">
+                47
+              </div>
+              <div className="mt-2.5">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#A5F5A6] text-[#171A18]">
+                  <span>↗</span>
+                  <span>+12.8%</span>
+                </span>
+                <span className="text-[11px] text-[#9CA3AF] block mt-1">
+                  vs. previous month
+                </span>
+              </div>
+            </div>
+
+            {/* 3-Month Stacked Bars (Sep, Oct, Nov) */}
+            <div className="flex items-end gap-3 sm:gap-4 pb-1">
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="text-[11px] font-semibold text-[#9CA3AF]">Sep</span>
+                <div className="w-14 sm:w-16 h-28 rounded-2xl overflow-hidden flex flex-col justify-end bg-[#333333]">
+                  <div className="h-16 bg-[#A5F5A6] rounded-t-2xl" />
+                  <div className="h-12 bg-[#C5A8F8]" />
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="text-[11px] font-semibold text-[#9CA3AF]">Oct</span>
+                <div className="w-14 sm:w-16 h-36 rounded-2xl overflow-hidden flex flex-col justify-end bg-[#333333]">
+                  <div className="h-24 bg-[#A5F5A6] rounded-t-2xl" />
+                  <div className="h-12 bg-[#C5A8F8]" />
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="text-[11px] font-semibold text-[#9CA3AF]">Nov</span>
+                <div className="w-14 sm:w-16 h-32 rounded-2xl overflow-hidden flex flex-col justify-end bg-[#333333]">
+                  <div className="h-20 bg-[#A5F5A6] rounded-t-2xl" />
+                  <div className="h-12 bg-[#C5A8F8]" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Card 2: Event Distribution Donut Card (5 cols) */}
-        <div className="lg:col-span-5 bg-surface rounded-panel border border-border shadow-panel p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#C5A8F8]" />
-                <h3 className="text-lg font-bold text-primary-text">Event Archetype Share</h3>
+        {/* Card 2: Key Trends (Surface Card, 6 cols) */}
+        <div className="lg:col-span-6 bg-surface rounded-[28px] p-6 sm:p-7 border border-border shadow-panel flex flex-col justify-between min-h-[300px]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+                <svg
+                  className="w-5 h-5 text-[#227C34]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                >
+                  <path d="M2 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+                  <path d="M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0" />
+                </svg>
               </div>
-              <Badge variant="normal">118 Matches</Badge>
+              <div>
+                <h3 className="text-xl font-bold text-primary-text leading-tight">
+                  Key Trends
+                </h3>
+                <p className="text-xs text-secondary-text mt-0.5">
+                  Water level and anomaly trends over time
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-secondary-text mb-4">
-              Classification breakdown generated by deterministic finite automata
-            </p>
 
-            <div className="h-48 w-full flex items-center justify-center">
+            <button className="px-3.5 py-1.5 rounded-full border border-border text-xs font-semibold text-primary-text hover:bg-surface-muted transition flex items-center gap-1">
+              <span>View Details</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-4 text-xs font-semibold pt-2">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#68DD79]" />
+              <span className="text-primary-text">Water level (m)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#C5A8F8]" />
+              <span className="text-secondary-text">Anomaly index</span>
+            </div>
+          </div>
+
+          {/* Dual Wave Area Chart */}
+          <div className="h-44 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0F3F1" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  stroke="#737A75"
+                  tick={{ fill: '#737A75', fontSize: 11 }}
+                  axisLine={{ stroke: '#D9DEDA' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  domain={[1.6, 2.8]}
+                  ticks={[1.6, 1.8, 2.0, 2.2, 2.4, 2.6]}
+                  stroke="#737A75"
+                  tick={{ fill: '#737A75', fontSize: 11 }}
+                  axisLine={{ stroke: '#D9DEDA' }}
+                  tickLine={false}
+                />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="waterLevel"
+                  stroke="#68DD79"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#68DD79', stroke: '#FFFFFF', strokeWidth: 2 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="anomaly"
+                  stroke="#C5A8F8"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#C5A8F8', stroke: '#FFFFFF', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Card 3: Station Comparison (Surface Card, 6 cols) */}
+        <div className="lg:col-span-6 bg-surface rounded-[28px] p-6 sm:p-7 border border-border shadow-panel flex flex-col justify-between min-h-[300px]">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+                <svg
+                  className="w-5 h-5 text-[#227C34]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                >
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-primary-text leading-tight">
+                  Station Comparison
+                </h3>
+                <p className="text-xs text-secondary-text mt-0.5">
+                  Water-level change vs. network mean (last 30 days)
+                </p>
+              </div>
+            </div>
+
+            <div className="px-3.5 py-1.5 rounded-full bg-surface-muted border border-border text-xs font-semibold text-primary-text flex items-center gap-1.5 cursor-pointer">
+              <span>All Stations</span>
+              <span className="text-[10px] text-secondary-text">⌄</span>
+            </div>
+          </div>
+
+          {/* Diverging Horizontal Bars Around 0.0 */}
+          <div className="space-y-3.5 my-3">
+            {comparisonData.map((st) => (
+              <div key={st.station} className="flex items-center text-xs">
+                {/* Station Name */}
+                <span className="w-28 font-bold text-primary-text truncate">
+                  {st.station}
+                </span>
+
+                {/* Diverging Bar Area (Left = Negative Lavender, Right = Positive Mint) */}
+                <div className="flex-1 flex items-center h-5 relative mx-2">
+                  {/* Center vertical baseline 0.0 */}
+                  <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-[#D9DEDA]" />
+
+                  {st.isPositive ? (
+                    // Positive bar (from center to right)
+                    <div
+                      className="h-4 rounded-r-md bg-[#A5F5A6] absolute left-1/2 flex items-center justify-end px-2"
+                      style={{ width: `${(st.delta / 0.6) * 50}%` }}
+                    >
+                      <span className="text-[10px] font-bold text-[#171A18] font-mono">
+                        +{st.delta.toFixed(2)} m
+                      </span>
+                    </div>
+                  ) : (
+                    // Negative bar (from right to left towards center)
+                    <div
+                      className="h-4 rounded-l-md bg-[#C5A8F8] absolute right-1/2 flex items-center justify-start px-2"
+                      style={{ width: `${(Math.abs(st.delta) / 0.6) * 50}%` }}
+                    >
+                      <span className="text-[10px] font-bold text-[#171A18] font-mono">
+                        {st.delta.toFixed(2)} m
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Scale Axis */}
+          <div className="flex items-center justify-between text-[11px] text-secondary-text font-mono border-t border-border pt-2 pl-28 pr-4">
+            <span>-0.6</span>
+            <span>-0.4</span>
+            <span>-0.2</span>
+            <span className="font-bold text-primary-text">0.0</span>
+            <span>+0.2</span>
+            <span>+0.4</span>
+            <span>+0.6</span>
+          </div>
+        </div>
+
+        {/* Card 4: Event Distribution Donut Card (6 cols) */}
+        <div className="lg:col-span-6 bg-surface rounded-[28px] p-6 sm:p-7 border border-border shadow-panel flex flex-col justify-between min-h-[300px]">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-2xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+              <svg
+                className="w-5 h-5 text-[#227C34]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-primary-text leading-tight">
+                Event Distribution
+              </h3>
+              <p className="text-xs text-secondary-text mt-0.5">
+                Water-level events by type (last 30 days)
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 my-2">
+            {/* Donut Chart with Centered Total */}
+            <div className="relative w-44 h-44 shrink-0 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={eventDistributionData}
+                    data={distributionData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={75}
-                    paddingAngle={3}
-                    dataKey="value"
+                    innerRadius={52}
+                    outerRadius={76}
+                    paddingAngle={2}
+                    dataKey="count"
                   >
-                    {eventDistributionData.map((entry, index) => (
+                    {distributionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#F7F9F6',
-                      borderColor: '#D9DEDA',
-                      borderRadius: '12px',
-                    }}
-                  />
                 </PieChart>
               </ResponsiveContainer>
+
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-3xl font-black font-sans text-primary-text">
+                  96
+                </span>
+                <span className="text-[10px] text-secondary-text font-medium">
+                  Total Events
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {eventDistributionData.map((item) => (
-                <div key={item.name} className="flex items-center gap-2 text-xs">
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                  <span className="truncate text-secondary-text">{item.name}</span>
-                  <span className="font-mono font-bold text-primary-text ml-auto">{item.value}%</span>
+            {/* Legend List */}
+            <div className="flex-1 space-y-3 w-full">
+              {distributionData.map((item) => (
+                <div
+                  key={item.name}
+                  className="flex items-center justify-between p-2 rounded-xl hover:bg-surface-muted/60 transition"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
+                      style={{ backgroundColor: item.color, color: '#171A18' }}
+                    >
+                      {item.name.includes('High') ? '↗' : item.name.includes('Low') ? '↘' : '≈'}
+                    </div>
+                    <span className="text-xs font-bold text-primary-text">
+                      {item.name}
+                    </span>
+                  </div>
+
+                  <span className="text-xs font-mono font-bold text-primary-text">
+                    {item.count} ({item.pct})
+                  </span>
                 </div>
               ))}
             </div>
@@ -230,130 +394,139 @@ export const ReportsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Station Comparison Section */}
-      <div className="bg-surface rounded-panel border border-border shadow-panel p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-lg font-bold text-primary-text">Station Disruption Comparison</h3>
-            <p className="text-xs text-secondary-text mt-0.5">
-              Comparative anomaly frequency and average residual deviation across monitored coastal ports
-            </p>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<Download className="w-3.5 h-3.5" />}
-            onClick={() => handleExport('comparison-all', 'CSV')}
-          >
-            Export CSV
-          </Button>
-        </div>
-
-        <div className="h-60 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              layout="vertical"
-              data={stationComparisonData}
-              margin={{ top: 10, right: 20, left: 60, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#EAEFEC" horizontal={false} />
-              <XAxis type="number" stroke="#737A75" tick={{ fill: '#737A75', fontSize: 11 }} />
-              <YAxis
-                type="category"
-                dataKey="station"
-                stroke="#737A75"
-                tick={{ fill: '#171A18', fontSize: 11 }}
-                width={130}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#F7F9F6',
-                  borderColor: '#D9DEDA',
-                  borderRadius: '12px',
-                }}
-              />
-              <Bar dataKey="surges" name="Surge Incidents" fill="#68DD79" radius={[0, 4, 4, 0]} />
-              <Bar dataKey="blowouts" name="Low Blowouts" fill="#C5A8F8" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Report Archive & Export Table */}
-      <div className="bg-surface rounded-panel border border-border shadow-panel p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-surface-muted border border-border flex items-center justify-center">
-              <FileSpreadsheet className="w-5 h-5 text-mint-strong" />
+      {/* Full-Width Bottom Card: Exported Report History Table */}
+      <div className="bg-surface rounded-[28px] border border-border shadow-panel p-6 sm:p-7">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
+              <svg
+                className="w-5 h-5 text-[#227C34]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-primary-text">Published Reports & Insights</h3>
-              <p className="text-xs text-secondary-text">
-                Certified water-level pattern recognition documents and scientific audits
+              <h3 className="text-xl font-bold text-primary-text leading-tight">
+                Exported Report History
+              </h3>
+              <p className="text-xs text-secondary-text mt-0.5">
+                Recently generated reports and downloads
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="primary"
-              size="sm"
-              icon={<FileText className="w-3.5 h-3.5" />}
-              onClick={() => handleExport('new-custom-report', 'PDF')}
-            >
-              Generate Report
-            </Button>
-          </div>
+          <button className="px-4 py-2 rounded-full border border-border text-xs font-semibold text-primary-text hover:bg-surface-muted transition flex items-center gap-1.5">
+            <span>Manage Reports</span>
+            <span>→</span>
+          </button>
         </div>
 
-        {/* Table Container */}
-        <div className="overflow-x-auto rounded-card border border-border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-surface-muted text-secondary-text text-xs uppercase font-semibold border-b border-border">
-              <tr>
-                <th className="py-3 px-4">Document Title & ID</th>
-                <th className="py-3 px-4">Period</th>
-                <th className="py-3 px-4">Stations Scope</th>
-                <th className="py-3 px-4">Classification</th>
-                <th className="py-3 px-4">Size</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-border/80 text-secondary-text">
+                <th className="pb-3 font-semibold">Report Name</th>
+                <th className="pb-3 font-semibold">Date Range</th>
+                <th className="pb-3 font-semibold">Generated</th>
+                <th className="pb-3 font-semibold">Format</th>
+                <th className="pb-3 font-semibold">Size</th>
+                <th className="pb-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {reportHistory.map((report) => (
-                <tr key={report.id} className="hover:bg-surface-muted/50 transition">
-                  <td className="py-3.5 px-4">
-                    <div className="font-semibold text-primary-text leading-snug">{report.title}</div>
-                    <div className="font-mono text-[11px] text-secondary-text">{report.id}</div>
-                  </td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-secondary-text">{report.period}</td>
-                  <td className="py-3.5 px-4 text-xs font-medium text-primary-text">{report.stations}</td>
-                  <td className="py-3.5 px-4">
-                    <Badge variant={report.status === 'Generated' ? 'normal' : 'neutral'} size="sm">
-                      {report.type}
-                    </Badge>
-                  </td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-secondary-text">{report.fileSize}</td>
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleExport(report.id, 'PDF')}
-                      >
-                        PDF
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleExport(report.id, 'CSV')}
-                      >
-                        CSV
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-border/60">
+              {/* Row 1 */}
+              <tr className="hover:bg-surface-muted/50 transition">
+                <td className="py-3.5 font-bold text-primary-text flex items-center gap-2.5">
+                  <span className="text-secondary-text">📄</span>
+                  <span>Monthly Monitoring Report – Nov 2024</span>
+                </td>
+                <td className="py-3.5 text-secondary-text">Nov 1, 2024 – Nov 30, 2024</td>
+                <td className="py-3.5 text-secondary-text">Dec 1, 2024, 10:24</td>
+                <td className="py-3.5">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#DCFADC] text-[#156024]">
+                    PDF
+                  </span>
+                </td>
+                <td className="py-3.5 text-secondary-text font-mono">2.8 MB</td>
+                <td className="py-3.5 text-right">
+                  <div className="inline-flex items-center gap-2">
+                    <button
+                      onClick={() => handleExport('Monthly Monitoring Report', 'PDF')}
+                      className="p-1.5 rounded-lg border border-border text-secondary-text hover:text-primary-text hover:bg-surface"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                    <button className="p-1.5 rounded-lg border border-border text-secondary-text hover:text-primary-text hover:bg-surface">
+                      <MoreHorizontal className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              {/* Row 2 */}
+              <tr className="hover:bg-surface-muted/50 transition">
+                <td className="py-3.5 font-bold text-primary-text flex items-center gap-2.5">
+                  <span className="text-secondary-text">📄</span>
+                  <span>Station Comparison Analysis</span>
+                </td>
+                <td className="py-3.5 text-secondary-text">Oct 1, 2024 – Nov 30, 2024</td>
+                <td className="py-3.5 text-secondary-text">Nov 30, 2024, 16:07</td>
+                <td className="py-3.5">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#EBE0FE] text-[#784FD8]">
+                    CSV
+                  </span>
+                </td>
+                <td className="py-3.5 text-secondary-text font-mono">1.1 MB</td>
+                <td className="py-3.5 text-right">
+                  <div className="inline-flex items-center gap-2">
+                    <button
+                      onClick={() => handleExport('Station Comparison Analysis', 'CSV')}
+                      className="p-1.5 rounded-lg border border-border text-secondary-text hover:text-primary-text hover:bg-surface"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                    <button className="p-1.5 rounded-lg border border-border text-secondary-text hover:text-primary-text hover:bg-surface">
+                      <MoreHorizontal className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              {/* Row 3 */}
+              <tr className="hover:bg-surface-muted/50 transition">
+                <td className="py-3.5 font-bold text-primary-text flex items-center gap-2.5">
+                  <span className="text-secondary-text">📄</span>
+                  <span>Anomaly Events Summary</span>
+                </td>
+                <td className="py-3.5 text-secondary-text">Nov 1, 2024 – Nov 30, 2024</td>
+                <td className="py-3.5 text-secondary-text">Nov 30, 2024, 09:13</td>
+                <td className="py-3.5">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#DCFADC] text-[#156024]">
+                    PDF
+                  </span>
+                </td>
+                <td className="py-3.5 text-secondary-text font-mono">2.3 MB</td>
+                <td className="py-3.5 text-right">
+                  <div className="inline-flex items-center gap-2">
+                    <button
+                      onClick={() => handleExport('Anomaly Events Summary', 'PDF')}
+                      className="p-1.5 rounded-lg border border-border text-secondary-text hover:text-primary-text hover:bg-surface"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                    <button className="p-1.5 rounded-lg border border-border text-secondary-text hover:text-primary-text hover:bg-surface">
+                      <MoreHorizontal className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
