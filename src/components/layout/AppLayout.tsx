@@ -61,8 +61,27 @@ export const ROUTE_METADATA: Record<string, RouteMeta> = {
 
 export const AppLayout: React.FC = () => {
   const location = useLocation();
-  const [selectedStation, setSelectedStation] = useState<string>('all');
-  const [selectedRange, setSelectedRange] = useState<string>('30d');
+  const handleStationChange = (id: string) => {
+    setSelectedStation(id);
+    if (id !== 'all') {
+      const { selectStation, stations } = useStationStore.getState();
+      selectStation(id);
+      const st = stations.find((s) => s.id === id);
+      if (st) {
+        useTideDataStore.getState().loadStationData(st.id, st.name, selectedRange === '24h' ? 24 : 720);
+      }
+    }
+  };
+
+  const handleRangeChange = (range: string) => {
+    setSelectedRange(range);
+    useTideDataStore.getState().setTimeRange(range);
+    const { selectedStation: curr } = useStationStore.getState();
+    if (curr?.id) {
+      const hours = range === '24h' ? 24 : range === '7d' ? 168 : 720;
+      useTideDataStore.getState().loadStationData(curr.id, curr.name, hours);
+    }
+  };
 
   const meta = ROUTE_METADATA[location.pathname] || {
     title: 'Seasify',

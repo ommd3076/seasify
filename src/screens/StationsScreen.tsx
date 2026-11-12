@@ -5,6 +5,8 @@ import {
   ArrowRight,
   Calendar,
   Wrench,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useStationStore } from '@/stores/stationStore';
 import { useTideDataStore } from '@/stores/tideDataStore';
@@ -18,12 +20,12 @@ const WaveIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) =
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2.3"
+    strokeWidth="2.4"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <path d="M2 9c2-1.8 4-1.8 6 0s4 1.8 6 0 4-1.8 6 0" />
-    <path d="M2 15c2-1.8 4-1.8 6 0s4 1.8 6 0 4-1.8 6 0" />
+    <path d="M3 9c2.5-2.2 5.5-2.2 8 0s5.5 2.2 8 0" />
+    <path d="M3 15c2.5-2.2 5.5-2.2 8 0s5.5 2.2 8 0" />
   </svg>
 );
 
@@ -277,9 +279,10 @@ export const StationsScreen: React.FC = () => {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={validPage === 1}
+              aria-label="Previous Page"
               className="w-7 h-7 rounded-full flex items-center justify-center text-xs text-[#737A75] hover:text-[#171A18] hover:bg-[#EAEFEC] disabled:opacity-30 transition-colors font-medium"
             >
-              &lt;
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
 
             {Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1).map((page) => (
@@ -315,9 +318,10 @@ export const StationsScreen: React.FC = () => {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={validPage === totalPages}
+              aria-label="Next Page"
               className="w-7 h-7 rounded-full flex items-center justify-center text-xs text-[#737A75] hover:text-[#171A18] hover:bg-[#EAEFEC] disabled:opacity-30 transition-colors font-medium"
             >
-              &gt;
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -379,28 +383,28 @@ export const StationsScreen: React.FC = () => {
                   <svg viewBox="0 0 200 48" className="w-full h-full overflow-visible">
                     <defs>
                       <linearGradient id="mintWaveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#242424" stopOpacity="0.10" />
-                        <stop offset="100%" stopColor="#242424" stopOpacity="0.0" />
+                        <stop offset="0%" stopColor="#171A18" stopOpacity="0.10" />
+                        <stop offset="100%" stopColor="#171A18" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
                     <path
-                      d="M 0 38 Q 45 44 75 24 T 150 26 T 190 14"
+                      d="M 0 36 C 40 44, 70 20, 110 32 C 140 40, 160 16, 185 16"
                       fill="none"
                       stroke="#171A18"
-                      strokeWidth="2.5"
+                      strokeWidth="2.4"
                       strokeLinecap="round"
                     />
                     <path
-                      d="M 0 38 Q 45 44 75 24 T 150 26 T 190 14 L 190 48 L 0 48 Z"
+                      d="M 0 36 C 40 44, 70 20, 110 32 C 140 40, 160 16, 185 16 L 185 48 L 0 48 Z"
                       fill="url(#mintWaveGrad)"
                     />
                     <circle
-                      cx="190"
-                      cy="14"
+                      cx="185"
+                      cy="16"
                       r="3.5"
                       fill="#FFFFFF"
                       stroke="#171A18"
-                      strokeWidth="2.5"
+                      strokeWidth="2.4"
                     />
                   </svg>
                 </div>
@@ -425,12 +429,12 @@ export const StationsScreen: React.FC = () => {
                 <div className="w-full h-12 mt-2">
                   <svg viewBox="0 0 200 48" className="w-full h-full overflow-visible">
                     <path
-                      d="M 0 34 Q 50 42 90 28 T 160 18 T 200 16 L 200 48 L 0 48 Z"
+                      d="M 0 38 C 50 40, 80 18, 120 22 C 150 25, 170 16, 200 18 L 200 48 L 0 48 Z"
                       fill="#9D73EE"
                       fillOpacity="0.45"
                     />
                     <path
-                      d="M 0 34 Q 50 42 90 28 T 160 18 T 200 16"
+                      d="M 0 38 C 50 40, 80 18, 120 22 C 150 25, 170 16, 200 18"
                       fill="none"
                       stroke="#8C52FF"
                       strokeWidth="2.2"

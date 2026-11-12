@@ -25,6 +25,16 @@ export const STATION_OPTIONS = [
   { value: '9447130', label: 'Seattle, WA (9447130)' },
 ];
 
+export const REGION_OPTIONS = [
+  { value: 'All Regions', label: 'All Regions' },
+  { value: 'North Coast', label: 'North Coast' },
+  { value: 'Central Coast', label: 'Central Coast' },
+  { value: 'South Coast', label: 'South Coast' },
+  { value: 'East Coast', label: 'East Coast' },
+  { value: 'Gulf Coast', label: 'Gulf Coast' },
+  { value: 'Pacific Northwest', label: 'Pacific NW' },
+];
+
 export const STATUS_OPTIONS = [
   { value: 'All Statuses', label: 'All Statuses' },
   { value: 'Normal', label: 'Normal' },
@@ -43,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
   extraControls,
   isStationsScreen = false,
 }) => {
-  const { statusFilter, setStatusFilter } = useStationStore();
+  const { statusFilter, setStatusFilter, regionFilter, setRegionFilter } = useStationStore();
 
   const [station, setStation] = React.useState(selectedStation);
   const [range, setRange] = React.useState(selectedRange);

@@ -40,15 +40,17 @@ export const StationMap: React.FC<StationMapProps> = ({
       dotColor = '#3B82F6';
     }
 
-    const size = isSelected ? 32 : 24;
+    const size = isSelected ? 30 : 22;
 
     const selectedStyle = isSelected
-      ? `box-shadow: 0 0 0 4px rgba(104, 221, 121, 0.35), 0 2px 8px rgba(0,0,0,0.18); transform: scale(1.15);`
+      ? `box-shadow: 0 0 0 4px rgba(104, 221, 121, 0.35), 0 2px 8px rgba(0,0,0,0.18); transform: scale(1.1);`
       : `box-shadow: 0 1px 4px rgba(0,0,0,0.15);`;
 
     const innerContent = isWrench
-      ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${dotColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`
-      : `<div style="width: ${size * 0.45}px; height: ${size * 0.45}px; border-radius: 9999px; background: ${dotColor};"></div>`;
+      ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${dotColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`
+      : isSelected
+        ? `<div style="width: 8px; height: 8px; border-radius: 9999px; background: #359D45;"></div>`
+        : '';
 
     const html = `
       <div style="position: relative; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
@@ -87,16 +89,15 @@ export const StationMap: React.FC<StationMapProps> = ({
     // Clean standard tiles without watermark
     const map = L.map(mapContainerRef.current, {
       center: [37.8, -122.4],
-      zoom: 5,
+      zoom: 6,
       zoomControl: false,
+      attributionControl: false,
     });
 
     L.tileLayer(
-      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
       {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; NOAA CO-OPS',
-        subdomains: 'abc',
-        maxZoom: 19,
+        maxZoom: 13,
       }
     ).addTo(map);
 
@@ -163,7 +164,7 @@ export const StationMap: React.FC<StationMapProps> = ({
 
     const station = stations.find((s) => s.id === selectedStationId);
     if (station && typeof station.lat === 'number' && typeof station.lng === 'number') {
-      map.flyTo([station.lat, station.lng], 6, { duration: 1.0 });
+      map.setView([station.lat, station.lng], 6);
     }
   }, [selectedStationId, stations]);
 
@@ -222,6 +223,11 @@ export const StationMap: React.FC<StationMapProps> = ({
           <span className="w-2.5 h-2.5 rounded-full bg-[#9CA3AF]" />
           <span>Maintenance</span>
         </div>
+      </div>
+
+      {/* Discreet bottom-right attribution */}
+      <div className="absolute bottom-1.5 right-3 z-[400] text-[10px] text-[#737A75]/60 pointer-events-none select-none font-medium">
+        © OpenStreetMap & NOAA CO-OPS
       </div>
     </div>
   );

@@ -1,12 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Radio,
+  LayoutGrid,
+  MapPin,
   Activity,
-  TrendingUp,
-  AlertTriangle,
-  FileText,
+  Layers,
+  Calendar,
+  BarChart3,
   UploadCloud,
   Bell,
   Settings,
@@ -21,12 +21,12 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { id: 'overview', name: 'Overview', path: '/overview', icon: LayoutDashboard },
-  { id: 'stations', name: 'Stations', path: '/stations', icon: Radio },
+  { id: 'overview', name: 'Overview', path: '/overview', icon: LayoutGrid },
+  { id: 'stations', name: 'Stations', path: '/stations', icon: MapPin },
   { id: 'monitoring', name: 'Monitoring', path: '/monitoring', icon: Activity },
-  { id: 'patterns', name: 'Patterns', path: '/patterns', icon: TrendingUp },
-  { id: 'events', name: 'Events', path: '/events', icon: AlertTriangle },
-  { id: 'reports', name: 'Reports', path: '/reports', icon: FileText },
+  { id: 'patterns', name: 'Patterns', path: '/patterns', icon: Layers },
+  { id: 'events', name: 'Events', path: '/events', icon: Calendar },
+  { id: 'reports', name: 'Reports', path: '/reports', icon: BarChart3 },
   { id: 'upload', name: 'Upload', path: '/upload', icon: UploadCloud },
   { id: 'alerts', name: 'Alerts', path: '/alerts', icon: Bell },
   { id: 'settings', name: 'Settings', path: '/settings', icon: Settings },

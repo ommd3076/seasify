@@ -93,7 +93,7 @@ export const NOAA_STATIONS: StationMetadata[] = [
   },
   {
     id: '9447130',
-    name: 'Seattle (Puget Sound), WA',
+    name: 'Seattle, WA',
     lat: 47.6019,
     lng: -122.3392,
     state: 'WA',
@@ -135,7 +135,7 @@ export const NOAA_STATIONS: StationMetadata[] = [
   },
   {
     id: '8575512',
-    name: 'Annapolis (Naval Academy), MD',
+    name: 'Annapolis, MD',
     lat: 38.9833,
     lng: -76.48,
     state: 'MD',
