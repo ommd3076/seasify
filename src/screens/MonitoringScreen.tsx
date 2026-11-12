@@ -1,13 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import {
   Activity,
   ArrowUpRight,
+  ArrowDownRight,
   ChevronRight,
+  ChevronDown,
   Wind,
   CloudRain,
   AlertCircle,
   CheckCircle2,
   MapPin,
+  Check,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -21,10 +24,29 @@ import {
 } from 'recharts';
 import { useStationStore } from '@/stores/stationStore';
 import { useTideDataStore } from '@/stores/tideDataStore';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { formatWaterLevel, formatDelta } from '@/utils/formatUnit';
 
 export const MonitoringScreen: React.FC = () => {
   const { stations, selectedStation, selectStation } = useStationStore();
   const { points, loadStationData } = useTideDataStore();
+  const { settings } = useSettingsStore();
+  const unitSetting = settings.waterLevelUnit;
+
+  const [isStationDropdownOpen, setIsStationDropdownOpen] = useState(false);
+  const [rateWindow, setRateWindow] = useState<'1h' | '6h' | '24h'>('1h');
+  const stationDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (stationDropdownRef.current && !stationDropdownRef.current.contains(e.target as Node)) {
+        setIsStationDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (points.length === 0) {
@@ -67,10 +89,34 @@ export const MonitoringScreen: React.FC = () => {
   }, [points]);
 
   const latestPoint = chartData[chartData.length - 1] || {
-    observed: 1.38,
-    predicted: 1.30,
-    residual: 0.08,
+    observed: selectedStation.waterLevel,
+    predicted: selectedStation.predictedLevel,
+    residual: selectedStation.residual,
   };
+
+  // Dynamic rate calculation based on active rateWindow and unit
+  const rateMultiplier = unitSetting === 'english' ? 3.28084 : 1.0;
+  const unitSuffix = unitSetting === 'english' ? 'ft' : 'm';
+
+  let rateDisplay = '';
+  let rateSubtitle = '';
+  let isRatePositive = true;
+
+  if (rateWindow === '1h') {
+    const rawHourly = (selectedStation.delta24h / 6);
+    isRatePositive = rawHourly >= 0;
+    rateDisplay = `${isRatePositive ? '+' : ''}${(rawHourly * rateMultiplier).toFixed(2)} ${unitSuffix}/h`;
+    rateSubtitle = 'Hourly water-level velocity';
+  } else if (rateWindow === '6h') {
+    const raw6h = (selectedStation.delta24h * 0.45);
+    isRatePositive = raw6h >= 0;
+    rateDisplay = `${isRatePositive ? '+' : ''}${(raw6h * rateMultiplier).toFixed(2)} ${unitSuffix}`;
+    rateSubtitle = 'Net change vs. 6 hours ago';
+  } else {
+    isRatePositive = selectedStation.delta24h >= 0;
+    rateDisplay = `${isRatePositive ? '+' : ''}${(selectedStation.delta24h * rateMultiplier).toFixed(2)} ${unitSuffix}`;
+    rateSubtitle = '24-hour diurnal tidal variance';
+  }
 
   return (
     <div data-testid="screen-monitoring" className="space-y-6">
@@ -217,7 +263,7 @@ export const MonitoringScreen: React.FC = () => {
 
               <div>
                 <div className="text-4xl font-black font-sans tracking-tight text-white mt-3">
-                  {latestPoint.observed.toFixed(2)} m
+                  {formatWaterLevel(latestPoint.observed, unitSetting).withUnit}
                 </div>
 
                 {/* Glowing green area sparkline */}
@@ -257,7 +303,7 @@ export const MonitoringScreen: React.FC = () => {
 
               <div>
                 <div className="text-4xl font-black font-sans tracking-tight text-primary-text mt-3">
-                  {latestPoint.residual >= 0 ? '+' : ''}{latestPoint.residual.toFixed(2)} m
+                  {formatDelta(latestPoint.residual, unitSetting)}
                 </div>
 
                 <div className="mt-2.5">
@@ -269,41 +315,103 @@ export const MonitoringScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 3: Change Rate (Surface Card) */}
+            {/* Card 3: Change Rate (Surface Card with Horizon Toggle) */}
             <div className="bg-surface rounded-[28px] p-6 border border-border shadow-panel flex flex-col justify-between min-h-[190px]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#DCFADC] text-[#227C34] flex items-center justify-center shrink-0">
-                  <ArrowUpRight className="w-5 h-5" />
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                      isRatePositive ? 'bg-[#DCFADC] text-[#227C34]' : 'bg-[#FEE2E2] text-[#DC2626]'
+                    }`}
+                  >
+                    {isRatePositive ? (
+                      <ArrowUpRight className="w-5 h-5" />
+                    ) : (
+                      <ArrowDownRight className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-primary-text leading-tight">
+                      Change Rate
+                    </h4>
+                    <p className="text-xs text-secondary-text mt-0.5">
+                      {rateSubtitle}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-base font-bold text-primary-text leading-tight">
-                    Change Rate
-                  </h4>
-                  <p className="text-xs text-secondary-text mt-0.5">
-                    Water level change
-                  </p>
+
+                {/* Interactive Horizon Button Pill */}
+                <div className="flex items-center gap-0.5 p-1 rounded-full bg-surface-muted border border-border shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setRateWindow('1h')}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition cursor-pointer ${
+                      rateWindow === '1h'
+                        ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
+                        : 'text-secondary-text hover:text-primary-text'
+                    }`}
+                  >
+                    1h
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRateWindow('6h')}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition cursor-pointer ${
+                      rateWindow === '6h'
+                        ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
+                        : 'text-secondary-text hover:text-primary-text'
+                    }`}
+                  >
+                    6h
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRateWindow('24h')}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition cursor-pointer ${
+                      rateWindow === '24h'
+                        ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
+                        : 'text-secondary-text hover:text-primary-text'
+                    }`}
+                  >
+                    24h
+                  </button>
                 </div>
               </div>
 
               <div>
                 <div className="text-4xl font-black font-sans tracking-tight text-primary-text mt-3">
-                  +0.24 m/h
+                  {rateDisplay}
                 </div>
 
-                {/* Ascending green wave sparkline with terminal circle */}
+                {/* Dynamic wave sparkline with terminal circle */}
                 <div className="h-10 w-full mt-2">
                   <svg className="w-full h-full overflow-visible" viewBox="0 0 200 40" fill="none">
                     <path
-                      d="M 0 35 C 50 35, 100 28, 150 15 C 175 8, 190 6, 195 5 L 195 40 L 0 40 Z"
-                      fill="rgba(104, 221, 121, 0.2)"
+                      d={
+                        isRatePositive
+                          ? 'M 0 35 C 50 35, 100 28, 150 15 C 175 8, 190 6, 195 5 L 195 40 L 0 40 Z'
+                          : 'M 0 5 C 50 5, 100 12, 150 25 C 175 32, 190 34, 195 35 L 195 40 L 0 40 Z'
+                      }
+                      fill={isRatePositive ? 'rgba(104, 221, 121, 0.2)' : 'rgba(197, 168, 248, 0.2)'}
                     />
                     <path
-                      d="M 0 35 C 50 35, 100 28, 150 15 C 175 8, 190 6, 195 5"
-                      stroke="#359D45"
+                      d={
+                        isRatePositive
+                          ? 'M 0 35 C 50 35, 100 28, 150 15 C 175 8, 190 6, 195 5'
+                          : 'M 0 5 C 50 5, 100 12, 150 25 C 175 32, 190 34, 195 35'
+                      }
+                      stroke={isRatePositive ? '#359D45' : '#784FD8'}
                       strokeWidth="2.5"
                       strokeLinecap="round"
                     />
-                    <circle cx="195" cy="5" r="3.5" fill="#FFFFFF" stroke="#359D45" strokeWidth="2" />
+                    <circle
+                      cx="195"
+                      cy={isRatePositive ? 5 : 35}
+                      r="3.5"
+                      fill="#FFFFFF"
+                      stroke={isRatePositive ? '#359D45' : '#784FD8'}
+                      strokeWidth="2"
+                    />
                   </svg>
                 </div>
               </div>
@@ -337,10 +445,10 @@ export const MonitoringScreen: React.FC = () => {
               <div className="flex items-end justify-between mt-3">
                 <div>
                   <div className="text-3xl font-black font-sans tracking-tight text-primary-text">
-                    Rising Tide
+                    {selectedStation.tidalPhase || 'Rising Tide'}
                   </div>
                   <div className="text-xs font-semibold text-secondary-text mt-1">
-                    Next high in 2 h 34 m
+                    {selectedStation.nextHighTide ? `Next high at ${selectedStation.nextHighTide.time}` : 'Next high in 2 h 34 m'}
                   </div>
                 </div>
 
@@ -355,18 +463,51 @@ export const MonitoringScreen: React.FC = () => {
 
         {/* Right Column: Station Selector, Sensor Status, Anomaly Flags (4 cols / ~28%) */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Station Card */}
-          <div className="bg-surface rounded-[28px] border border-border shadow-panel p-6">
+          {/* Station Card with Working Dropdown Popover */}
+          <div ref={stationDropdownRef} className="bg-surface rounded-[28px] border border-border shadow-panel p-6 relative">
             <h4 className="text-base font-bold text-primary-text mb-3">Station</h4>
-            <div className="flex items-center justify-between p-3 rounded-20 bg-surface-muted border border-border cursor-pointer">
-              <div className="flex items-center gap-2.5">
-                <MapPin className="w-4 h-4 text-secondary-text" />
-                <span className="text-sm font-bold text-primary-text">
+            <div
+              onClick={() => setIsStationDropdownOpen(!isStationDropdownOpen)}
+              className="flex items-center justify-between p-3 rounded-20 bg-surface-muted hover:bg-surface border border-border cursor-pointer transition shadow-2xs group"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <MapPin className="w-4 h-4 text-secondary-text group-hover:text-primary-text shrink-0" />
+                <span className="text-sm font-bold text-primary-text truncate">
                   {selectedStation.name}
                 </span>
               </div>
-              <span className="text-xs text-secondary-text font-bold">⌄</span>
+              <ChevronDown className="w-4 h-4 text-secondary-text font-bold shrink-0 group-hover:translate-y-0.5 transition-transform" />
             </div>
+
+            {/* Dropdown Menu */}
+            {isStationDropdownOpen && (
+              <div className="absolute left-6 right-6 top-[96px] z-50 max-h-64 overflow-y-auto bg-white rounded-24 shadow-2xl border border-border py-2 divide-y divide-border/40">
+                {stations.map((st) => {
+                  const isCur = st.id === selectedStation.id;
+                  return (
+                    <button
+                      key={st.id}
+                      onClick={() => {
+                        selectStation(st.id);
+                        loadStationData(st.id, st.name, 24);
+                        setIsStationDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-xs flex items-center justify-between hover:bg-surface-muted transition cursor-pointer ${
+                        isCur ? 'bg-[#DCFADC] font-bold text-[#156024]' : 'text-primary-text'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate pr-2">
+                        {isCur && <Check className="w-3.5 h-3.5 text-[#156024] shrink-0" />}
+                        <span className="truncate">{st.name} ({st.state})</span>
+                      </div>
+                      <span className="text-[11px] font-mono text-secondary-text shrink-0">
+                        {formatWaterLevel(st.waterLevel, unitSetting).withUnit}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Sensor Status Card */}
