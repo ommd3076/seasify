@@ -634,6 +634,17 @@ export const SettingsScreen: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Scientific Limitation & Educational Disclaimer Notice */}
+      <div className="p-4 rounded-[22px] bg-surface border border-border flex items-start gap-3.5 shadow-2xs">
+        <div className="w-8 h-8 rounded-xl bg-[#EAEFEC] text-[#737A75] flex items-center justify-center shrink-0 text-sm font-bold mt-0.5">
+          ℹ
+        </div>
+        <div className="text-xs text-secondary-text leading-relaxed">
+          <span className="font-bold text-primary-text block mb-0.5">Scientific Limitation & Educational Purpose</span>
+          A positive residual is not necessarily a flood, and a negative residual is not necessarily a dangerous low tide. Seasify is an educational and analytical research platform utilizing finite automata theory for environmental time-series pattern recognition, not a certified life-safety flood-warning or maritime-navigation system.
+        </div>
+      </div>
     </div>
   );
 };
