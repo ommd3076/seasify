@@ -23,7 +23,31 @@ export const ReportsScreen: React.FC = () => {
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
   const handleExport = (reportName: string, format: 'PDF' | 'CSV') => {
-    setDownloadSuccess(`Exporting ${reportName} as ${format}...`);
+    if (format === 'CSV') {
+      const csvContent =
+        'Date,Station,Observed Water Level (m),Predicted Water Level (m),Residual (m),Anomaly Status\n' +
+        '2024-11-01,The Battery NY,1.42,1.36,0.06,Normal\n' +
+        '2024-11-05,San Francisco CA,1.86,1.54,0.32,Elevated\n' +
+        '2024-11-09,Boston Harbor MA,2.65,2.61,0.04,Normal\n' +
+        '2024-11-13,Key West FL,0.38,0.64,-0.26,Low Tide\n' +
+        '2024-11-17,Seattle WA,2.92,2.88,0.04,Normal\n' +
+        '2024-11-21,Galveston Pier 21 TX,0.88,0.58,0.30,Elevated\n' +
+        '2024-11-25,Annapolis MD,0.82,0.48,0.34,Elevated\n' +
+        '2024-11-29,Monterey CA,1.68,1.64,0.04,Normal\n';
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `seasify-${reportName.toLowerCase().replace(/\s+/g, '-')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else if (format === 'PDF') {
+      window.print();
+    }
+    setDownloadSuccess(`Exported ${reportName} as ${format}`);
     setTimeout(() => setDownloadSuccess(null), 3000);
   };
 

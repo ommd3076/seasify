@@ -57,6 +57,50 @@ export const OverviewScreen: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Synchronize carousel index if selectedStation changes elsewhere
+  useEffect(() => {
+    const idx = stations.findIndex((s) => s.id === selectedStation.id);
+    if (idx !== -1 && idx !== stationIndex) {
+      setStationIndex(idx);
+    }
+  }, [selectedStation.id, stations]);
+
+  // Compute dynamic gauge scale, fill ratio, and dot coordinates for the selected station
+  const currentWaterLevel = selectedStation.waterLevel;
+  // Typical coastal water-level scale 0m to 3.5m, scaling up for extreme tidal ranges (e.g. Eastport 7.2m)
+  const effectiveMax = Math.max(3.5, Math.ceil(currentWaterLevel * 1.15));
+  const rawRatio = currentWaterLevel / effectiveMax;
+  // Keep clamped between 8% and 96% so the rounded cap is always visible and does not overshoot the track
+  const gaugeRatio = Math.max(0.08, Math.min(0.96, rawRatio));
+
+  // Semi-circular geometry: cx = 100, cy = 100, radius = 85
+  // Total arc length: Math.PI * 85 ≈ 267.04
+  const arcLength = 267.04;
+  const strokeOffset = arcLength * (1 - gaugeRatio);
+
+  // Marker dot angle: starts at Math.PI (180 deg) at ratio=0, sweeps clockwise to 0 at ratio=1
+  const dotAngle = Math.PI * (1 - gaugeRatio);
+  const dotX = 100 + 85 * Math.cos(dotAngle);
+  const dotY = 100 - 85 * Math.sin(dotAngle);
+
+  // Pattern forecast values derived from the active station
+  const highTideHeight = selectedStation.nextHighTide?.height ?? Number((currentWaterLevel * 1.28).toFixed(2));
+  const highTideTime = selectedStation.nextHighTide?.time ?? '14:26';
+  const highDelta = Math.max(0.05, highTideHeight - currentWaterLevel);
+
+  const lowTideHeight = selectedStation.nextLowTide?.height ?? Number((currentWaterLevel * 0.35).toFixed(2));
+  const lowTideTime = selectedStation.nextLowTide?.time ?? '20:47';
+  const lowDelta = Math.max(0.05, currentWaterLevel - lowTideHeight);
+
+  // Project subsequent tides based on M2 semidiurnal periodicity (12.42h)
+  const computeNextTidalTime = (timeStr: string, hoursToAdd: number): string => {
+    const [h, m] = (timeStr || '12:00').split(':').map(Number);
+    const totalMinutes = Math.round((h || 0) * 60 + (m || 0) + hoursToAdd * 60);
+    const nextH = Math.floor(totalMinutes / 60) % 24;
+    const nextM = totalMinutes % 60;
+    return `${nextH.toString().padStart(2, '0')}:${nextM.toString().padStart(2, '0')}`;
+  };
+
   const handlePrevStation = (e: React.MouseEvent) => {
     e.stopPropagation();
     const nextIdx = (stationIndex - 1 + stations.length) % stations.length;
@@ -433,30 +477,50 @@ export const OverviewScreen: React.FC = () => {
                     </pattern>
                   </defs>
 
-                  {/* Right Arc: Diagonal Hatched Pattern */}
+                  {/* Background Track Arc: Full Semi-Circle with Diagonal Green Hatched Pattern */}
                   <path
-                    d="M 100 15 A 85 85 0 0 1 185 100"
+                    d="M 15 100 A 85 85 0 0 1 185 100"
                     fill="none"
                     stroke="url(#gaugeHatch)"
                     strokeWidth="20"
                     strokeLinecap="round"
                   />
 
-                  {/* Left Arc: Solid Charcoal */}
+                  {/* Active Foreground Arc: Solid Charcoal dynamically filling from 15,100 based on water level */}
                   <path
-                    d="M 15 100 A 85 85 0 0 1 125 22"
+                    d="M 15 100 A 85 85 0 0 1 185 100"
                     fill="none"
                     stroke="#242424"
                     strokeWidth="20"
                     strokeLinecap="round"
+                    strokeDasharray={arcLength}
+                    strokeDashoffset={strokeOffset}
+                    style={{
+                      transition: 'stroke-dashoffset 700ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
                   />
 
-                  {/* Marker Dot: Lavender circle */}
-                  <circle cx="125" cy="22" r="5" fill="#C5A8F8" stroke="#242424" strokeWidth="2" />
+                  {/* Marker Dot: Lavender circle positioned dynamically at the tip of the charcoal arc */}
+                  <g
+                    style={{
+                      transform: `translate(${dotX.toFixed(2)}px, ${dotY.toFixed(2)}px)`,
+                      transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                  >
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r={5}
+                      fill="#C5A8F8"
+                      stroke="#242424"
+                      strokeWidth={2}
+                      className="transition-transform duration-200 group-hover:scale-125"
+                    />
+                  </g>
                 </svg>
 
                 {/* Gauge Centered Value */}
-                <div className="absolute bottom-2 text-center">
+                <div className="absolute bottom-2 text-center pointer-events-none">
                   <div className="text-4xl font-black text-[#242424] font-sans tracking-tight">
                     {selectedStation.waterLevel.toFixed(2)} m
                   </div>
@@ -528,10 +592,10 @@ export const OverviewScreen: React.FC = () => {
               >
                 <div className="absolute -left-[17px] top-2.5 w-2.5 h-2.5 rounded-full border-2 border-primary-text bg-surface" />
                 <div className="text-xs font-bold text-primary-text leading-tight">
-                  Today, 14:26
+                  Today, {highTideTime}
                 </div>
                 <div className="text-[11px] text-secondary-text">
-                  High tide (≈ 2.31 m)
+                  High tide (≈ {highTideHeight.toFixed(2)} m)
                 </div>
               </div>
 
@@ -542,10 +606,10 @@ export const OverviewScreen: React.FC = () => {
               >
                 <div className="absolute -left-[17px] top-2.5 w-2.5 h-2.5 rounded-full border-2 border-primary-text bg-surface" />
                 <div className="text-xs font-bold text-primary-text leading-tight">
-                  Today, 20:47
+                  Today, {lowTideTime}
                 </div>
                 <div className="text-[11px] text-secondary-text">
-                  Low tide (≈ 0.89 m)
+                  Low tide (≈ {lowTideHeight.toFixed(2)} m)
                 </div>
               </div>
 
@@ -556,10 +620,10 @@ export const OverviewScreen: React.FC = () => {
               >
                 <div className="absolute -left-[17px] top-2.5 w-2.5 h-2.5 rounded-full border-2 border-primary-text bg-surface" />
                 <div className="text-xs font-bold text-primary-text leading-tight">
-                  Tomorrow, 03:15
+                  Tomorrow, {computeNextTidalTime(highTideTime, 12.4)}
                 </div>
                 <div className="text-[11px] text-secondary-text">
-                  High tide (≈ 2.28 m)
+                  High tide (≈ {(highTideHeight * 0.98).toFixed(2)} m)
                 </div>
               </div>
 
@@ -570,10 +634,10 @@ export const OverviewScreen: React.FC = () => {
               >
                 <div className="absolute -left-[17px] top-2.5 w-2.5 h-2.5 rounded-full bg-[#171A18]" />
                 <div className="text-xs font-bold text-primary-text leading-tight">
-                  Tomorrow, 09:36
+                  Tomorrow, {computeNextTidalTime(lowTideTime, 12.4)}
                 </div>
                 <div className="text-[11px] text-secondary-text">
-                  Low tide (≈ 0.93 m)
+                  Low tide (≈ {(lowTideHeight * 1.05).toFixed(2)} m)
                 </div>
               </div>
             </div>
@@ -593,10 +657,10 @@ export const OverviewScreen: React.FC = () => {
                 </div>
                 <div className="my-1">
                   <div className="text-2xl font-black font-sans tracking-tight text-[#171A18]">
-                    2.31 m
+                    {highTideHeight.toFixed(2)} m
                   </div>
                   <div className="text-[11px] font-semibold text-[#171A18]/70">
-                    +0.18 m above mean
+                    +{highDelta.toFixed(2)} m above current
                   </div>
                 </div>
 
@@ -630,10 +694,10 @@ export const OverviewScreen: React.FC = () => {
                 </div>
                 <div className="my-1">
                   <div className="text-2xl font-black font-sans tracking-tight text-[#171A18]">
-                    0.89 m
+                    {lowTideHeight.toFixed(2)} m
                   </div>
                   <div className="text-[11px] font-semibold text-[#171A18]/70">
-                    -0.21 m below mean
+                    -{lowDelta.toFixed(2)} m below current
                   </div>
                 </div>
 

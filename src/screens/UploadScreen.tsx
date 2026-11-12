@@ -21,16 +21,18 @@ export const UploadScreen: React.FC = () => {
   const [previewMode, setPreviewMode] = useState<'table' | 'chart'>('table');
   const [uploadProgress, setUploadProgress] = useState(72);
   const [isCanceled, setIsCanceled] = useState(false);
+  const [currentFileName, setCurrentFileName] = useState('HarborPoint_2023-2024_tide.csv');
+  const [uploadedFileSize, setUploadedFileSize] = useState('4.0 GB');
 
-  const previewTableData = [
+  const [tableData, setTableData] = useState([
     { timestamp: '2023-01-01 00:00', waterLevel: 0.42, station: 'Harbor Point', flag: 0 },
     { timestamp: '2023-01-01 00:10', waterLevel: 0.48, station: 'Harbor Point', flag: 0 },
     { timestamp: '2023-01-01 00:20', waterLevel: 0.55, station: 'Harbor Point', flag: 0 },
     { timestamp: '2023-01-01 00:30', waterLevel: 0.60, station: 'Harbor Point', flag: 0 },
     { timestamp: '2023-01-01 00:40', waterLevel: 0.64, station: 'Harbor Point', flag: 0 },
-  ];
+  ]);
 
-  const previewChartData = [
+  const [chartData, setChartData] = useState([
     { day: 'Jan 1', level: 0.2 },
     { day: 'Jan 2', level: 1.4 },
     { day: 'Jan 3', level: -0.8 },
@@ -42,7 +44,62 @@ export const UploadScreen: React.FC = () => {
     { day: 'Jan 9', level: -0.6 },
     { day: 'Jan 10', level: 2.3 },
     { day: 'Jan 11', level: -0.4 },
-  ];
+  ]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCurrentFileName(file.name);
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    setUploadedFileSize(`${sizeMb} MB`);
+    setUploadProgress(100);
+    setIsCanceled(false);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+      if (lines.length <= 1) return;
+
+      const header = lines[0].split(',').map((h) => h.trim().toLowerCase());
+      const timeIdx = header.findIndex((h) => h.includes('time') || h.includes('date'));
+      const levelIdx = header.findIndex(
+        (h) => h.includes('water') || h.includes('level') || h.includes('obs') || h.includes('val')
+      );
+
+      const parsedRows: Array<{ timestamp: string; waterLevel: number; station: string; flag: number }> = [];
+      const parsedChart: Array<{ day: string; level: number }> = [];
+
+      for (let i = 1; i < Math.min(lines.length, 50); i++) {
+        const parts = lines[i].split(',').map((p) => p.trim());
+        const t = timeIdx >= 0 && parts[timeIdx] ? parts[timeIdx] : `2024-11-01 00:${i * 10}`;
+        const val = levelIdx >= 0 && parts[levelIdx] ? parseFloat(parts[levelIdx]) : 1.2 + Math.sin(i * 0.4) * 0.8;
+        const validVal = isNaN(val) ? 0.5 : val;
+
+        if (parsedRows.length < 5) {
+          parsedRows.push({
+            timestamp: t,
+            waterLevel: parseFloat(validVal.toFixed(2)),
+            station: file.name.replace(/\.[^/.]+$/, ''),
+            flag: 0,
+          });
+        }
+        if (parsedChart.length < 12) {
+          parsedChart.push({
+            day: `Pt ${i}`,
+            level: parseFloat(validVal.toFixed(2)),
+          });
+        }
+      }
+
+      if (parsedRows.length > 0) setTableData(parsedRows);
+      if (parsedChart.length > 0) setChartData(parsedChart);
+    };
+    reader.readAsText(file.slice(0, 50000));
+  };
 
   return (
     <div data-testid="screen-upload" className="space-y-6">
@@ -96,7 +153,12 @@ export const UploadScreen: React.FC = () => {
             <label className="px-5 py-2.5 rounded-full border border-border bg-white text-xs font-bold text-primary-text hover:bg-surface-muted transition shadow-xs cursor-pointer flex items-center gap-2">
               <FileSpreadsheet className="w-4 h-4 text-secondary-text" />
               <span>Browse Files</span>
-              <input type="file" className="hidden" accept=".csv,.txt,.nc,.h5" />
+              <input
+                type="file"
+                className="hidden"
+                accept=".csv,.txt,.nc,.h5"
+                onChange={handleFileChange}
+              />
             </label>
           </div>
         </div>
@@ -205,7 +267,7 @@ export const UploadScreen: React.FC = () => {
             </div>
             <div className="min-w-0">
               <div className="font-bold text-sm text-primary-text truncate">
-                HarborPoint_2023-2024_tide.csv
+                {currentFileName}
               </div>
               <div className="text-xs text-secondary-text mt-0.5">
                 Uploading and validating...
@@ -216,7 +278,7 @@ export const UploadScreen: React.FC = () => {
           <div className="flex-1 w-full md:w-auto flex items-center gap-4">
             <div className="flex-1">
               <div className="flex items-center justify-between text-xs text-secondary-text mb-1.5 font-medium">
-                <span>2.9 GB of 4.0 GB • ~1 min remaining</span>
+                <span>{uploadProgress === 100 ? `${uploadedFileSize} • Complete` : `2.9 GB of ${uploadedFileSize} • ~1 min remaining`}</span>
                 <span className="font-bold text-primary-text">{uploadProgress}%</span>
               </div>
               <div className="w-full h-2.5 bg-surface-muted rounded-full overflow-hidden flex">
@@ -445,7 +507,7 @@ export const UploadScreen: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60 font-mono">
-                {previewTableData.map((row, i) => (
+                {tableData.map((row, i) => (
                   <tr key={i} className="hover:bg-surface-muted/40 transition">
                     <td className="py-2.5 text-secondary-text">{row.timestamp}</td>
                     <td className="py-2.5 font-bold text-primary-text">{row.waterLevel.toFixed(2)}</td>
@@ -460,11 +522,11 @@ export const UploadScreen: React.FC = () => {
           {/* Chart Preview (6 cols) */}
           <div className="lg:col-span-6 pl-0 lg:pl-4 border-t lg:border-t-0 lg:border-l border-border/80">
             <div className="text-xs font-bold text-primary-text mb-2">
-              Water Level (Harbor Point)
+              Water Level ({currentFileName.replace(/\.[^/.]+$/, '')})
             </div>
             <div className="h-40 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={previewChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="uploadLavender" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#C5A8F8" stopOpacity={0.6} />
@@ -473,7 +535,7 @@ export const UploadScreen: React.FC = () => {
                   </defs>
                   <XAxis dataKey="day" stroke="#737A75" tick={{ fill: '#737A75', fontSize: 10 }} />
                   <YAxis domain={[-2.8, 2.8]} ticks={[-2.8, -1.4, 0.0, 1.4, 2.8]} stroke="#737A75" tick={{ fill: '#737A75', fontSize: 10 }} unit="m" />
-                  <Area type="monotone" dataKey="level" stroke="#6B21A8" strokeWidth={2} fillOpacity={1} fill="url(#uploadLavender)" />
+                  <Area type="monotone" dataKey="level" stroke="#6B21A8" strokeWidth={2} fillOpacity={1} fill="url(#uploadLavender)" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
