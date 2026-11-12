@@ -413,6 +413,7 @@ export const EventsScreen: React.FC = () => {
                       strokeWidth={2.5}
                       fillOpacity={1}
                       fill="url(#eventLavender)"
+                      isAnimationActive={false}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
