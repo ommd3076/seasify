@@ -25,15 +25,15 @@ Unlike simple threshold alert systems, Seasify models multi-stage coastal hydrod
   - Partition-refinement DFA minimization preserving distinct pattern output labels.
   - Continuous stream pattern matcher with step-by-step state audit traces and deduplication.
 - **Ten Coherent Desktop Screens:**
-  1. **Overview:** Network activity, active stations, radial gauge, and pattern forecast.
-  2. **Stations:** Real NOAA stations explorer, interactive Leaflet coastal map, status badges, and station metadata.
-  3. **Monitoring:** High-resolution Recharts time series comparing observed water levels and astronomical predictions with interactive crosshairs and sensor status.
-  4. **Patterns:** Curated library of 6 oceanographic patterns with archetypes and coverage metrics.
-  5. **Events:** Detected anomaly log, 3-stage progression cards (Before, During Peak, After), and scientific explanations.
+  1. **Overview:** Network activity, active stations, radial water-level gauge with live trigonometry arc, and semidiurnal M2 pattern forecast.
+  2. **Stations:** Real NOAA stations explorer, Carto Voyager interactive map with custom coastal pins, status pills, and station metadata cards.
+  3. **Monitoring:** High-resolution Recharts time series comparing observed water levels and astronomical predictions with interactive station selector popover, change-rate horizon toggles (1h/6h/24h), and sensor health matrix.
+  4. **Patterns:** Curated library of 6 oceanographic patterns, reactive Pattern Coverage arc gauge (7D/30D/90D), and a full-width **Active Detections & Automata Pipeline Command Hub** with live state streams and hourly activity histogram.
+  5. **Events:** Detected anomaly log, dynamic 6-hour event hydrograph with peak callout badges, automatic mint/lavender gradient switching, 3-stage progression cards, and scientific explanations.
   6. **Reports:** Monthly anomaly summaries, key trend curves, diverging station comparisons, and working PDF & CSV exports.
-  7. **Upload:** Custom user CSV observation uploader with datum/units declaration and schema validation.
-  8. **Alerts:** Local rule manager with toggles, thresholds, notification channels, and quiet hours.
-  9. **Settings:** Measurement preferences (metric/feet, datums), telemetry refresh intervals, and theme controls.
+  7. **Upload:** Custom user CSV observation uploader with datum/units declaration, schema validation, and dynamic chart preview.
+  8. **Alerts:** Local rule manager with toggles, thresholds, notification channels, and interactive Quiet Hours scheduler with from/to popovers and timezone support.
+  9. **Settings:** Measurement preferences (metric/imperial unit switching with global store synchronization), sensor precision popovers, telemetry refresh intervals, and scientific research disclaimers.
   10. **Pattern Engine / Automata Lab:** Interactive SVG automata diagrams, state transition tables, synchronized event stream tapes, and step-by-step simulator.
 - **Refined Visual Design:** Faithfully matches the provided design reference with soft neutral backgrounds (`#DBE2DB`), crisp panels (`#F7F9F6`), dark charcoal contrast cards (`#242424`), and vibrant mint (`#A5F5A6`) and lavender (`#C5A8F8`) accents with rounded-28px card geometry.
 
