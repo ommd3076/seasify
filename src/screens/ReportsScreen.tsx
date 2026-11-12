@@ -207,6 +207,7 @@ export const ReportsScreen: React.FC = () => {
                   stroke="#68DD79"
                   strokeWidth={2.5}
                   dot={{ r: 4, fill: '#68DD79', stroke: '#FFFFFF', strokeWidth: 2 }}
+                  isAnimationActive={false}
                 />
                 <Line
                   type="monotone"
@@ -214,6 +215,7 @@ export const ReportsScreen: React.FC = () => {
                   stroke="#C5A8F8"
                   strokeWidth={2.5}
                   dot={{ r: 4, fill: '#C5A8F8', stroke: '#FFFFFF', strokeWidth: 2 }}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ResponsiveContainer>
