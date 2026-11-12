@@ -452,9 +452,14 @@ export const MonitoringScreen: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Lavender Circular Liquid Level Meter */}
-                <div className="w-16 h-16 rounded-full bg-[#EBE0FE] border-2 border-[#C5A8F8] flex items-end justify-center overflow-hidden shrink-0">
-                  <div className="w-full h-9 bg-[#C5A8F8] rounded-t-full" />
+                {/* Lavender Circular Liquid Level Meter with Wavy Surface matching Image 3 */}
+                <div className="w-16 h-16 rounded-full bg-[#EBE0FE] border-2 border-[#C5A8F8] flex items-end justify-center overflow-hidden shrink-0 relative">
+                  <svg viewBox="0 0 64 36" className="w-full h-9 overflow-hidden absolute bottom-0 left-0">
+                    <path
+                      d="M 0 10 Q 16 2, 32 10 T 64 10 L 64 36 L 0 36 Z"
+                      fill="#C5A8F8"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
