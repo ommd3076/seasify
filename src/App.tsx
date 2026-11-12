@@ -44,7 +44,7 @@ export const AppRoutes: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AppRoutes />
     </BrowserRouter>
   );
