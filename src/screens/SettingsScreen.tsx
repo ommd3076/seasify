@@ -12,16 +12,24 @@ import {
   Sun,
   Moon,
   Laptop,
+  Info,
+  Check,
 } from 'lucide-react';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { formatWaterLevel } from '@/utils/formatUnit';
 
 export const SettingsScreen: React.FC = () => {
+  const { settings, updateSettings } = useSettingsStore();
   const [refreshInterval, setRefreshInterval] = useState('15 min');
-  const [waterUnit, setWaterUnit] = useState('meters');
+  const [waterUnit, setWaterUnit] = useState<'meters' | 'feet'>(
+    settings.waterLevelUnit === 'english' ? 'feet' : 'meters'
+  );
   const [tideRef, setTideRef] = useState('msl');
   const [tempUnit, setTempUnit] = useState('celsius');
   const [theme, setTheme] = useState('light');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   const [stationsList, setStationsList] = useState([
     { id: 'hp', name: 'Harbor Point', updated: 'Last update 2 min ago', active: true },
@@ -264,26 +272,37 @@ export const SettingsScreen: React.FC = () => {
             <div className="space-y-4">
               {/* Water level unit */}
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-primary-text">
-                  Water level unit
-                </span>
+                <div>
+                  <span className="text-xs font-bold text-primary-text block">
+                    Water level unit
+                  </span>
+                  <span className="text-[11px] text-secondary-text">
+                    Applied globally across all charts & gauges
+                  </span>
+                </div>
                 <div className="flex items-center gap-1 p-1 rounded-full bg-surface-muted border border-border">
                   <button
-                    onClick={() => setWaterUnit('meters')}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition ${
+                    onClick={() => {
+                      setWaterUnit('meters');
+                      updateSettings({ waterLevelUnit: 'metric' });
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
                       waterUnit === 'meters'
                         ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
-                        : 'text-secondary-text'
+                        : 'text-secondary-text hover:text-primary-text'
                     }`}
                   >
                     Meters (m)
                   </button>
                   <button
-                    onClick={() => setWaterUnit('feet')}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition ${
+                    onClick={() => {
+                      setWaterUnit('feet');
+                      updateSettings({ waterLevelUnit: 'english' });
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
                       waterUnit === 'feet'
                         ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
-                        : 'text-secondary-text'
+                        : 'text-secondary-text hover:text-primary-text'
                     }`}
                   >
                     Feet (ft)
@@ -291,31 +310,62 @@ export const SettingsScreen: React.FC = () => {
                 </div>
               </div>
 
+              {/* Unit Conversion Live Feedback */}
+              <div className="p-3 rounded-20 bg-[#DCFADC]/50 border border-[#A5F5A6] flex items-center justify-between text-xs">
+                <span className="text-secondary-text font-medium flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-[#156024]" />
+                  Active conversion:
+                </span>
+                <span className="font-mono font-bold text-[#156024]">
+                  {waterUnit === 'feet'
+                    ? `1.00 m = 3.28 ft (Imperial active)`
+                    : `1.00 m = 1.00 m (SI Metric active)`}
+                </span>
+              </div>
+
               {/* Tide height reference */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 relative">
                   <span className="text-xs font-bold text-primary-text">
                     Tide height reference
                   </span>
-                  <span className="text-[11px] text-secondary-text">ⓘ</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTooltip(activeTooltip === 'tideRef' ? null : 'tideRef')}
+                    onMouseEnter={() => setActiveTooltip('tideRef')}
+                    onMouseLeave={() => setActiveTooltip(null)}
+                    className="w-4 h-4 rounded-full bg-[#EAEFEC] hover:bg-[#D9DEDA] text-secondary-text hover:text-primary-text flex items-center justify-center text-[10px] font-bold cursor-pointer transition shadow-2xs"
+                    title="Click for datum details"
+                  >
+                    ⓘ
+                  </button>
+                  {activeTooltip === 'tideRef' && (
+                    <div className="absolute left-0 bottom-6 z-50 w-72 p-3 bg-white rounded-2xl shadow-xl border border-border text-xs text-primary-text leading-relaxed">
+                      <div className="font-bold mb-1 text-[#156024]">Tidal Reference Datums</div>
+                      <p className="text-[11px] text-secondary-text">
+                        <strong>MSL (Mean Sea Level):</strong> 19-year National Tidal Datum Epoch arithmetic mean.<br />
+                        <strong>Chart Datum (MLLW):</strong> Mean Lower Low Water sounding base for nautical navigation.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 p-1 rounded-full bg-surface-muted border border-border">
                   <button
                     onClick={() => setTideRef('msl')}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition ${
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
                       tideRef === 'msl'
                         ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
-                        : 'text-secondary-text'
+                        : 'text-secondary-text hover:text-primary-text'
                     }`}
                   >
                     Mean Sea Level
                   </button>
                   <button
                     onClick={() => setTideRef('datum')}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition ${
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
                       tideRef === 'datum'
                         ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
-                        : 'text-secondary-text'
+                        : 'text-secondary-text hover:text-primary-text'
                     }`}
                   >
                     Chart Datum
@@ -331,20 +381,20 @@ export const SettingsScreen: React.FC = () => {
                 <div className="flex items-center gap-1 p-1 rounded-full bg-surface-muted border border-border">
                   <button
                     onClick={() => setTempUnit('celsius')}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition ${
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
                       tempUnit === 'celsius'
                         ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
-                        : 'text-secondary-text'
+                        : 'text-secondary-text hover:text-primary-text'
                     }`}
                   >
                     Celsius (°C)
                   </button>
                   <button
                     onClick={() => setTempUnit('fahrenheit')}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition ${
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
                       tempUnit === 'fahrenheit'
                         ? 'bg-[#A5F5A6] text-[#171A18] shadow-xs'
-                        : 'text-secondary-text'
+                        : 'text-secondary-text hover:text-primary-text'
                     }`}
                   >
                     Fahrenheit (°F)
@@ -354,14 +404,31 @@ export const SettingsScreen: React.FC = () => {
 
               {/* Display precision */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 relative">
                   <span className="text-xs font-bold text-primary-text">
                     Display precision
                   </span>
-                  <span className="text-[11px] text-secondary-text">ⓘ</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTooltip(activeTooltip === 'precision' ? null : 'precision')}
+                    onMouseEnter={() => setActiveTooltip('precision')}
+                    onMouseLeave={() => setActiveTooltip(null)}
+                    className="w-4 h-4 rounded-full bg-[#EAEFEC] hover:bg-[#D9DEDA] text-secondary-text hover:text-primary-text flex items-center justify-center text-[10px] font-bold cursor-pointer transition shadow-2xs"
+                    title="Click for precision details"
+                  >
+                    ⓘ
+                  </button>
+                  {activeTooltip === 'precision' && (
+                    <div className="absolute left-0 bottom-6 z-50 w-64 p-3 bg-white rounded-2xl shadow-xl border border-border text-xs text-primary-text leading-relaxed">
+                      <div className="font-bold mb-1 text-[#156024]">Sensor Precision</div>
+                      <p className="text-[11px] text-secondary-text">
+                        Formats acoustic sensor soundings to 2 decimals ($0.01\text{ m} \approx 1\text{ cm}$), exceeding IHO S-44 hydrographic standards.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="px-3 py-1.5 rounded-full bg-surface-muted border border-border text-xs font-semibold text-primary-text flex items-center gap-2 cursor-pointer">
-                  <span>2 decimal places (e.g., 1.23 m)</span>
+                  <span>2 decimal places (e.g., 1.23 m / 4.04 ft)</span>
                   <span className="text-[10px] text-secondary-text">⌄</span>
                 </div>
               </div>

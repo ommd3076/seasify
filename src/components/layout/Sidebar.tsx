@@ -93,7 +93,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Sidebar Footer System Status */}
       <div className="pt-4 border-t border-[#D9DEDA]/80 mt-auto px-2">
-        <div className="flex items-center justify-between text-xs text-[#737A75]">
+        <div className="flex items-center text-xs text-[#737A75]">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#68DD79] opacity-75"></span>
@@ -101,9 +101,6 @@ export const Sidebar: React.FC = () => {
             </span>
             <span className="font-medium text-[#171A18]">NOAA CO-OPS</span>
           </div>
-          <span className="font-mono text-[11px] bg-[#EAEFEC] px-2 py-0.5 rounded-full border border-[#D9DEDA]">
-            v1.0
-          </span>
         </div>
       </div>
     </aside>

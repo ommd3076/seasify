@@ -12,9 +12,13 @@ import {
 import { useStationStore } from '@/stores/stationStore';
 import { useTideDataStore } from '@/stores/tideDataStore';
 import { useNavigationStore } from '@/stores/navigationStore';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { formatWaterLevel, formatDelta } from '@/utils/formatUnit';
 
 export const OverviewScreen: React.FC = () => {
   const navigate = useNavigate();
+  const { settings } = useSettingsStore();
+  const unitSetting = settings.waterLevelUnit;
   const { stations, selectedStation, selectStation } = useStationStore();
   const { points, loadStationData } = useTideDataStore();
   const { setSelectedEventId } = useNavigationStore();
@@ -522,7 +526,7 @@ export const OverviewScreen: React.FC = () => {
                 {/* Gauge Centered Value */}
                 <div className="absolute bottom-2 text-center pointer-events-none">
                   <div className="text-4xl font-black text-[#242424] font-sans tracking-tight">
-                    {selectedStation.waterLevel.toFixed(2)} m
+                    {formatWaterLevel(selectedStation.waterLevel, unitSetting).withUnit}
                   </div>
                 </div>
               </div>
@@ -533,8 +537,7 @@ export const OverviewScreen: React.FC = () => {
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-xs font-bold text-[#171A18] shadow-xs">
                   <span>
-                    {selectedStation.delta24h >= 0 ? '+' : ''}
-                    {selectedStation.delta24h.toFixed(2)} m
+                    {formatDelta(selectedStation.delta24h, unitSetting)}
                   </span>
                   <span>↗</span>
                 </div>
@@ -595,7 +598,7 @@ export const OverviewScreen: React.FC = () => {
                   Today, {highTideTime}
                 </div>
                 <div className="text-[11px] text-secondary-text">
-                  High tide (≈ {highTideHeight.toFixed(2)} m)
+                  High tide (≈ {formatWaterLevel(highTideHeight, unitSetting).withUnit})
                 </div>
               </div>
 
@@ -609,7 +612,7 @@ export const OverviewScreen: React.FC = () => {
                   Today, {lowTideTime}
                 </div>
                 <div className="text-[11px] text-secondary-text">
-                  Low tide (≈ {lowTideHeight.toFixed(2)} m)
+                  Low tide (≈ {formatWaterLevel(lowTideHeight, unitSetting).withUnit})
                 </div>
               </div>
 
@@ -623,7 +626,7 @@ export const OverviewScreen: React.FC = () => {
                   Tomorrow, {computeNextTidalTime(highTideTime, 12.4)}
                 </div>
                 <div className="text-[11px] text-secondary-text">
-                  High tide (≈ {(highTideHeight * 0.98).toFixed(2)} m)
+                  High tide (≈ {formatWaterLevel(highTideHeight * 0.98, unitSetting).withUnit})
                 </div>
               </div>
 
@@ -637,7 +640,7 @@ export const OverviewScreen: React.FC = () => {
                   Tomorrow, {computeNextTidalTime(lowTideTime, 12.4)}
                 </div>
                 <div className="text-[11px] text-secondary-text">
-                  Low tide (≈ {(lowTideHeight * 1.05).toFixed(2)} m)
+                  Low tide (≈ {formatWaterLevel(lowTideHeight * 1.05, unitSetting).withUnit})
                 </div>
               </div>
             </div>
@@ -657,10 +660,10 @@ export const OverviewScreen: React.FC = () => {
                 </div>
                 <div className="my-1">
                   <div className="text-2xl font-black font-sans tracking-tight text-[#171A18]">
-                    {highTideHeight.toFixed(2)} m
+                    {formatWaterLevel(highTideHeight, unitSetting).withUnit}
                   </div>
                   <div className="text-[11px] font-semibold text-[#171A18]/70">
-                    +{highDelta.toFixed(2)} m above current
+                    +{formatWaterLevel(highDelta, unitSetting).withUnit} above current
                   </div>
                 </div>
 
@@ -694,10 +697,10 @@ export const OverviewScreen: React.FC = () => {
                 </div>
                 <div className="my-1">
                   <div className="text-2xl font-black font-sans tracking-tight text-[#171A18]">
-                    {lowTideHeight.toFixed(2)} m
+                    {formatWaterLevel(lowTideHeight, unitSetting).withUnit}
                   </div>
                   <div className="text-[11px] font-semibold text-[#171A18]/70">
-                    -{lowDelta.toFixed(2)} m below current
+                    -{formatWaterLevel(lowDelta, unitSetting).withUnit} below current
                   </div>
                 </div>
 
