@@ -153,17 +153,72 @@ export const EventsScreen: React.FC = () => {
 
   const currentEvent = eventList[selectedEventIndex] || eventList[0];
 
-  // Simulated 6-hour event hydrograph
-  const eventTimeSeries = [
-    { time: '12:00', level: 2.22 },
-    { time: '13:00', level: 2.28 },
-    { time: '13:30', level: 2.35 },
-    { time: '14:00', level: 2.50 },
-    { time: '14:26', level: 2.73, isPeak: true },
-    { time: '15:00', level: 2.45 },
-    { time: '16:00', level: 2.32 },
-    { time: '17:00', level: 2.25 },
-  ];
+  const isFeet = (unitSetting as string) === 'imperial' || (unitSetting as string) === 'english' || (unitSetting as string) === 'feet';
+  const unitSuffix = isFeet ? 'ft' : 'm';
+
+  const toUnitVal = (strVal: string) => {
+    const num = parseFloat(strVal.replace(/[^0-9.-]/g, '')) || 0;
+    return isFeet ? Number((num * 3.28084).toFixed(2)) : Number(num.toFixed(2));
+  };
+
+  const formatDeltaStr = (deltaStr: string) => {
+    const num = parseFloat(deltaStr.replace(/[^0-9.-]/g, '')) || 0;
+    const sign = deltaStr.trim().startsWith('-') ? '-' : '+';
+    if (isFeet) {
+      const ft = Math.abs(num * 3.28084).toFixed(2);
+      return `${sign}${ft} ft`;
+    }
+    return `${sign}${Math.abs(num).toFixed(2)} m`;
+  };
+
+  const { chartData, yDomain, peakTime, beforeTime, afterTime } = useMemo(() => {
+    const duringVal = toUnitVal(currentEvent.during);
+    const beforeVal = toUnitVal(currentEvent.before);
+    const afterVal = toUnitVal(currentEvent.after);
+
+    const match = currentEvent.time.match(/(\d{1,2}):(\d{2})/);
+    const baseHour = match ? parseInt(match[1], 10) : 14;
+    const baseMin = match ? parseInt(match[2], 10) : 26;
+
+    const fmtTime = (totalMinutes: number) => {
+      const normalizedMins = ((totalMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);
+      const h = Math.floor(normalizedMins / 60);
+      const m = normalizedMins % 60;
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    };
+
+    const peakMins = baseHour * 60 + baseMin;
+    const pTime = fmtTime(peakMins);
+    const bTime = fmtTime(peakMins - 35);
+    const aTime = fmtTime(peakMins + 35);
+
+    const data = [
+      { time: fmtTime(peakMins - 140), level: Number((beforeVal * 0.97).toFixed(2)) },
+      { time: fmtTime(peakMins - 80), level: Number((beforeVal * 0.99).toFixed(2)) },
+      { time: bTime, level: Number(beforeVal.toFixed(2)) },
+      { time: fmtTime(peakMins - 15), level: Number(((beforeVal * 0.4) + (duringVal * 0.6)).toFixed(2)) },
+      { time: pTime, level: Number(duringVal.toFixed(2)), isPeak: true },
+      { time: fmtTime(peakMins + 15), level: Number(((duringVal * 0.4) + (afterVal * 0.6)).toFixed(2)) },
+      { time: aTime, level: Number(afterVal.toFixed(2)) },
+      { time: fmtTime(peakMins + 80), level: Number((afterVal * 0.98).toFixed(2)) },
+      { time: fmtTime(peakMins + 140), level: Number((afterVal * 0.97).toFixed(2)) },
+    ];
+
+    const levels = data.map((d) => d.level);
+    const minL = Math.min(...levels);
+    const maxL = Math.max(...levels);
+    const span = Math.max(0.4, maxL - minL);
+    const yMin = Math.max(0, Number((minL - span * 0.25).toFixed(1)));
+    const yMax = Number((maxL + span * 0.25).toFixed(1));
+
+    return {
+      chartData: data,
+      yDomain: [yMin, yMax] as [number, number],
+      peakTime: pTime,
+      beforeTime: bTime,
+      afterTime: aTime,
+    };
+  }, [currentEvent, isFeet]);
 
   return (
     <div data-testid="screen-events" className="space-y-6">
@@ -308,7 +363,7 @@ export const EventsScreen: React.FC = () => {
 
                     <div className="flex items-center gap-2.5 shrink-0">
                       <span className="font-bold text-xs font-mono text-[#171A18]">
-                        {ev.delta}
+                        {formatDeltaStr(ev.delta)}
                       </span>
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
@@ -356,7 +411,13 @@ export const EventsScreen: React.FC = () => {
                 </div>
               </div>
 
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#EBE0FE] text-[#784FD8] flex items-center gap-1.5">
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
+                  currentEvent.variant === 'mint'
+                    ? 'bg-[#DCFADC] text-[#227C34]'
+                    : 'bg-[#EBE0FE] text-[#784FD8]'
+                }`}
+              >
                 <span>000</span>
                 <span>{currentEvent.severity}</span>
               </span>
@@ -375,11 +436,15 @@ export const EventsScreen: React.FC = () => {
 
               <div className="h-48 w-full relative">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={eventTimeSeries} margin={{ top: 15, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart data={chartData} margin={{ top: 18, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="eventLavender" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#C5A8F8" stopOpacity={0.6} />
+                      <linearGradient id="eventLavenderGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#C5A8F8" stopOpacity={0.65} />
                         <stop offset="95%" stopColor="#C5A8F8" stopOpacity={0.05} />
+                      </linearGradient>
+                      <linearGradient id="eventMintGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#A5F5A6" stopOpacity={0.7} />
+                        <stop offset="95%" stopColor="#A5F5A6" stopOpacity={0.05} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#F0F3F1" vertical={false} />
@@ -391,13 +456,12 @@ export const EventsScreen: React.FC = () => {
                       tickLine={false}
                     />
                     <YAxis
-                      domain={[2.0, 2.8]}
-                      ticks={[2.0, 2.2, 2.4, 2.6, 2.8]}
+                      domain={yDomain}
                       stroke="#737A75"
                       tick={{ fill: '#737A75', fontSize: 11 }}
                       axisLine={{ stroke: '#D9DEDA' }}
                       tickLine={false}
-                      unit="m"
+                      unit={unitSuffix}
                     />
                     <Tooltip
                       content={({ active, payload }) => {
@@ -406,7 +470,13 @@ export const EventsScreen: React.FC = () => {
                         return (
                           <div className="bg-white border border-border rounded-xl p-2.5 shadow-panel text-xs">
                             <span className="font-bold text-primary-text">{d.time}: </span>
-                            <span className="font-mono text-[#784FD8] font-bold">{d.level} m</span>
+                            <span
+                              className={`font-mono font-bold ${
+                                currentEvent.variant === 'mint' ? 'text-[#227C34]' : 'text-[#784FD8]'
+                              }`}
+                            >
+                              {d.level} {unitSuffix}
+                            </span>
                           </div>
                         );
                       }}
@@ -414,18 +484,24 @@ export const EventsScreen: React.FC = () => {
                     <Area
                       type="monotone"
                       dataKey="level"
-                      stroke="#8B64DF"
+                      stroke={currentEvent.variant === 'mint' ? '#227C34' : '#8B64DF'}
                       strokeWidth={2.5}
                       fillOpacity={1}
-                      fill="url(#eventLavender)"
-                      isAnimationActive={false}
+                      fill={currentEvent.variant === 'mint' ? 'url(#eventMintGradient)' : 'url(#eventLavenderGradient)'}
+                      isAnimationActive={true}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
 
                 {/* Peak Callout Badge */}
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[#EBE0FE] border border-[#C5A8F8] text-xs font-bold text-[#784FD8] shadow-xs">
-                  14:26 {currentEvent.delta}
+                <div
+                  className={`absolute top-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full border text-xs font-bold shadow-xs transition-all ${
+                    currentEvent.variant === 'mint'
+                      ? 'bg-[#DCFADC] border-[#68DD79] text-[#156024]'
+                      : 'bg-[#EBE0FE] border-[#C5A8F8] text-[#784FD8]'
+                  }`}
+                >
+                  {peakTime} {formatDeltaStr(currentEvent.delta)}
                 </div>
               </div>
             </div>
@@ -437,20 +513,26 @@ export const EventsScreen: React.FC = () => {
                 <span className="text-xs font-semibold text-secondary-text block">
                   Before
                 </span>
-                <span className="text-[11px] text-secondary-text block">13:56</span>
+                <span className="text-[11px] text-secondary-text block">{beforeTime}</span>
                 <div className="text-xl font-black font-sans text-primary-text mt-1">
-                  {currentEvent.before}
+                  {isFeet ? `${toUnitVal(currentEvent.before)} ft` : currentEvent.before}
                 </div>
               </div>
 
-              {/* During Peak (Lavender card) */}
-              <div className="p-3.5 rounded-[20px] bg-[#EBE0FE] text-center shadow-xs">
-                <span className="text-xs font-bold text-[#784FD8] block">
+              {/* During Peak (Lavender / Mint card) */}
+              <div
+                className={`p-3.5 rounded-[20px] text-center shadow-xs ${
+                  currentEvent.variant === 'mint'
+                    ? 'bg-[#DCFADC] text-[#156024]'
+                    : 'bg-[#EBE0FE] text-[#784FD8]'
+                }`}
+              >
+                <span className="text-xs font-bold block">
                   During (Peak)
                 </span>
-                <span className="text-[11px] text-[#784FD8]/80 block">14:26</span>
-                <div className="text-xl font-black font-sans text-[#784FD8] mt-1">
-                  {currentEvent.during}
+                <span className="text-[11px] opacity-80 block">{peakTime}</span>
+                <div className="text-xl font-black font-sans mt-1">
+                  {isFeet ? `${toUnitVal(currentEvent.during)} ft` : currentEvent.during}
                 </div>
               </div>
 
@@ -459,9 +541,9 @@ export const EventsScreen: React.FC = () => {
                 <span className="text-xs font-semibold text-secondary-text block">
                   After
                 </span>
-                <span className="text-[11px] text-secondary-text block">14:56</span>
+                <span className="text-[11px] text-secondary-text block">{afterTime}</span>
                 <div className="text-xl font-black font-sans text-primary-text mt-1">
-                  {currentEvent.after}
+                  {isFeet ? `${toUnitVal(currentEvent.after)} ft` : currentEvent.after}
                 </div>
               </div>
             </div>
