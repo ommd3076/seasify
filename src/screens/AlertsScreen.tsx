@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Bell,
   Send,
@@ -9,6 +9,7 @@ import {
   ArrowDownRight,
   Activity,
   Layers,
+  Check,
 } from 'lucide-react';
 
 export const AlertsScreen: React.FC = () => {
@@ -68,6 +69,21 @@ export const AlertsScreen: React.FC = () => {
   });
 
   const [quietHours, setQuietHours] = useState(true);
+  const [quietStartHour, setQuietStartHour] = useState('22:00');
+  const [quietEndHour, setQuietEndHour] = useState('07:00');
+  const [quietTimezone, setQuietTimezone] = useState('UTC-08:00');
+  const [openQuietPicker, setOpenQuietPicker] = useState<'start' | 'end' | 'tz' | null>(null);
+  const quietRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (quietRef.current && !quietRef.current.contains(e.target as Node)) {
+        setOpenQuietPicker(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleRule = (id: string) => {
     setRules((prev) =>
@@ -521,7 +537,7 @@ export const AlertsScreen: React.FC = () => {
           </div>
 
           {/* Card 3: Quiet Hours */}
-          <div className="bg-surface rounded-[28px] border border-border shadow-panel p-6">
+          <div ref={quietRef} className="bg-surface rounded-[28px] border border-border shadow-panel p-6 relative">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#EBE0FE] text-[#784FD8] flex items-center justify-center shrink-0">
@@ -539,7 +555,7 @@ export const AlertsScreen: React.FC = () => {
 
               <button
                 onClick={() => setQuietHours(!quietHours)}
-                className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 shrink-0 ${
+                className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 shrink-0 cursor-pointer ${
                   quietHours ? 'bg-[#68DD79]' : 'bg-gray-300'
                 }`}
               >
@@ -551,17 +567,121 @@ export const AlertsScreen: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex items-center justify-between gap-2 p-3 rounded-20 bg-surface-muted/60 border border-border text-xs mb-3">
-              <span className="text-secondary-text">From</span>
-              <span className="font-bold text-primary-text font-mono">22:00 ⌄</span>
-              <span className="text-secondary-text">To</span>
-              <span className="font-bold text-primary-text font-mono">07:00 ⌄</span>
-              <span className="text-[11px] text-secondary-text font-mono">UTC-08:00</span>
+            <div
+              className={`flex items-center justify-between gap-2 p-2.5 rounded-20 bg-surface-muted/60 border border-border text-xs mb-3 transition-opacity ${
+                quietHours ? 'opacity-100' : 'opacity-50 pointer-events-none'
+              }`}
+            >
+              {/* From Selector Button */}
+              <div className="relative">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-secondary-text text-[11px]">From</span>
+                  <button
+                    type="button"
+                    onClick={() => setOpenQuietPicker(openQuietPicker === 'start' ? null : 'start')}
+                    className="font-bold text-primary-text font-mono bg-white hover:bg-[#EAEFEC] border border-border px-2 py-1 rounded-xl flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span>{quietStartHour}</span>
+                    <span className="text-[10px] text-secondary-text">⌄</span>
+                  </button>
+                </div>
+
+                {openQuietPicker === 'start' && (
+                  <div className="absolute left-0 mt-1.5 w-28 rounded-2xl bg-white border border-border shadow-xl py-1 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
+                    {['20:00', '21:00', '22:00', '23:00', '00:00'].map((time) => (
+                      <button
+                        key={time}
+                        onClick={() => {
+                          setQuietStartHour(time);
+                          setOpenQuietPicker(null);
+                        }}
+                        className={`w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-surface-muted transition font-mono ${
+                          quietStartHour === time ? 'font-bold text-[#156024] bg-[#DCFADC]' : 'text-primary-text'
+                        }`}
+                      >
+                        <span>{time}</span>
+                        {quietStartHour === time && <Check className="w-3 h-3 text-[#156024]" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* To Selector Button */}
+              <div className="relative">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-secondary-text text-[11px]">To</span>
+                  <button
+                    type="button"
+                    onClick={() => setOpenQuietPicker(openQuietPicker === 'end' ? null : 'end')}
+                    className="font-bold text-primary-text font-mono bg-white hover:bg-[#EAEFEC] border border-border px-2 py-1 rounded-xl flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span>{quietEndHour}</span>
+                    <span className="text-[10px] text-secondary-text">⌄</span>
+                  </button>
+                </div>
+
+                {openQuietPicker === 'end' && (
+                  <div className="absolute left-0 mt-1.5 w-28 rounded-2xl bg-white border border-border shadow-xl py-1 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
+                    {['05:00', '06:00', '07:00', '08:00', '09:00'].map((time) => (
+                      <button
+                        key={time}
+                        onClick={() => {
+                          setQuietEndHour(time);
+                          setOpenQuietPicker(null);
+                        }}
+                        className={`w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-surface-muted transition font-mono ${
+                          quietEndHour === time ? 'font-bold text-[#156024] bg-[#DCFADC]' : 'text-primary-text'
+                        }`}
+                      >
+                        <span>{time}</span>
+                        {quietEndHour === time && <Check className="w-3 h-3 text-[#156024]" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Timezone Selector Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setOpenQuietPicker(openQuietPicker === 'tz' ? null : 'tz')}
+                  className="text-[11px] font-mono text-secondary-text hover:text-primary-text bg-white border border-border px-2 py-1 rounded-xl flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>{quietTimezone}</span>
+                  <span className="text-[9px]">⌄</span>
+                </button>
+
+                {openQuietPicker === 'tz' && (
+                  <div className="absolute right-0 mt-1.5 w-36 rounded-2xl bg-white border border-border shadow-xl py-1 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
+                    {['UTC-08:00', 'UTC-05:00', 'UTC+00:00'].map((tz) => (
+                      <button
+                        key={tz}
+                        onClick={() => {
+                          setQuietTimezone(tz);
+                          setOpenQuietPicker(null);
+                        }}
+                        className={`w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-surface-muted transition font-mono ${
+                          quietTimezone === tz ? 'font-bold text-[#156024] bg-[#DCFADC]' : 'text-primary-text'
+                        }`}
+                      >
+                        <span>{tz}</span>
+                        {quietTimezone === tz && <Check className="w-3 h-3 text-[#156024]" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="text-[11px] text-secondary-text flex items-center gap-1.5">
               <span>ⓘ</span>
-              <span>Critical alerts (e.g., sensor outage) are always sent.</span>
+              <span>
+                {quietHours
+                  ? `Suppresses low/moderate notifications from ${quietStartHour} to ${quietEndHour} (${quietTimezone}).`
+                  : 'Quiet hours paused. All notifications delivered immediately.'}
+              </span>
             </div>
           </div>
 
