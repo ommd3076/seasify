@@ -43,7 +43,7 @@ export const StationsScreen: React.FC = () => {
   const { loadStationData } = useTideDataStore();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 4;
+  const ITEMS_PER_PAGE = 8;
 
   const handleSelectStation = (stationId: string) => {
     selectStation(stationId);
@@ -203,8 +203,8 @@ export const StationsScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Vertically Stacked Station Items */}
-            <div className="space-y-2.5">
+            {/* Vertically Stacked Station Items (8 items matching ui-ref Image 2) */}
+            <div className="space-y-2">
               {paginatedStations.map((station) => {
                 const isSelected = station.id === selectedStation.id;
 
@@ -213,15 +213,15 @@ export const StationsScreen: React.FC = () => {
                     <button
                       key={station.id}
                       onClick={() => handleSelectStation(station.id)}
-                      className="w-full text-left p-3.5 rounded-[22px] border-2 border-[#68DD79] bg-[#E2FBE3] transition-all flex items-center justify-between gap-3 shadow-xs"
+                      className="w-full text-left p-3 rounded-[20px] border-2 border-[#68DD79] bg-[#E2FBE3] transition-all flex items-center justify-between gap-3 shadow-xs"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         {/* Circular Green Wave Icon Badge */}
-                        <div className="w-10 h-10 rounded-full bg-[#C2F7C5] flex items-center justify-center shrink-0 text-[#171A18]">
-                          <WaveIcon className="w-5 h-5 text-[#359D45]" />
+                        <div className="w-9 h-9 rounded-full bg-[#C2F7C5] flex items-center justify-center shrink-0 text-[#171A18]">
+                          <WaveIcon className="w-4 h-4 text-[#359D45]" />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-semibold text-[15px] text-[#171A18] leading-tight truncate">
+                          <div className="font-semibold text-[14px] text-[#171A18] leading-tight truncate">
                             {station.name}
                           </div>
                           <div className="text-[12px] text-[#737A75] mt-0.5 leading-tight truncate font-medium">
@@ -242,12 +242,12 @@ export const StationsScreen: React.FC = () => {
                   <button
                     key={station.id}
                     onClick={() => handleSelectStation(station.id)}
-                    className="w-full text-left p-3.5 rounded-[22px] border border-[#E3E8E4] bg-white hover:bg-[#F4F7F4] transition-all flex items-center justify-between gap-3"
+                    className="w-full text-left p-3 rounded-[20px] border border-[#E3E8E4] bg-white hover:bg-[#F4F7F4] transition-all flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {renderIconBadge(station.status)}
                       <div className="min-w-0">
-                        <div className="font-semibold text-[15px] text-[#171A18] leading-tight truncate">
+                        <div className="font-semibold text-[14px] text-[#171A18] leading-tight truncate">
                           {station.name}
                         </div>
                         <div className="text-[12px] text-[#737A75] mt-0.5 leading-tight truncate font-medium">
@@ -447,7 +447,7 @@ export const StationsScreen: React.FC = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[#171A18]" />
+                    <Calendar className="w-4 h-4 text-[#171A18] shrink-0" />
                     <span className="text-[13px] font-semibold text-[#171A18]">
                       Last Anomaly
                     </span>

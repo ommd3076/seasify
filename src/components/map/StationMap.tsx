@@ -84,7 +84,7 @@ export const StationMap: React.FC<StationMapProps> = ({
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
-    // Clean subtle Positron tiles for coastal aesthetic
+    // Clean standard tiles without watermark
     const map = L.map(mapContainerRef.current, {
       center: [37.8, -122.4],
       zoom: 5,
@@ -92,10 +92,10 @@ export const StationMap: React.FC<StationMapProps> = ({
     });
 
     L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; NOAA CO-OPS',
-        subdomains: 'abcd',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; NOAA CO-OPS',
+        subdomains: 'abc',
         maxZoom: 19,
       }
     ).addTo(map);
