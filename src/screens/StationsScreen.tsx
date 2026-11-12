@@ -74,9 +74,12 @@ export const StationsScreen: React.FC = () => {
       const matchesRegion =
         regionFilter === 'All Regions' ||
         s.region.toLowerCase().includes(regionFilter.toLowerCase()) ||
-        (regionFilter === 'East Coast' && s.region.includes('East Coast')) ||
-        (regionFilter === 'Gulf Coast' && s.region.includes('Gulf Coast')) ||
-        (regionFilter === 'Pacific NW' && s.region.includes('Pacific Northwest'));
+        (regionFilter === 'North Coast' && s.region.toLowerCase().includes('north coast')) ||
+        (regionFilter === 'Central Coast' && s.region.toLowerCase().includes('central coast')) ||
+        (regionFilter === 'South Coast' && s.region.toLowerCase().includes('south coast')) ||
+        (regionFilter === 'East Coast' && s.region.toLowerCase().includes('east coast')) ||
+        (regionFilter === 'Gulf Coast' && s.region.toLowerCase().includes('gulf coast')) ||
+        (regionFilter === 'Pacific NW' && (s.region.toLowerCase().includes('pacific northwest') || s.region.toLowerCase().includes('pacific nw')));
 
       return matchesSearch && matchesStatus && matchesRegion;
     });
@@ -209,7 +212,7 @@ export const StationsScreen: React.FC = () => {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="bg-[#EAEFEC] border border-[#D9DEDA] pl-9 pr-4 py-1.5 rounded-full text-xs text-[#171A18] placeholder-[#737A75] w-40 sm:w-48 focus:outline-none focus:ring-2 focus:ring-[#68DD79] transition-all"
+                  className="bg-[#F0F4F1] border border-[#D9DEDA]/80 pl-9 pr-4 py-2 rounded-full text-xs text-[#171A18] placeholder-[#737A75] w-40 sm:w-52 focus:outline-none focus:ring-2 focus:ring-[#68DD79] focus:bg-white transition-all shadow-xs"
                 />
               </div>
             </div>
@@ -228,11 +231,11 @@ export const StationsScreen: React.FC = () => {
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         {/* Squircle Green Wave Icon Badge */}
-                        <div className="w-9 h-9 rounded-[14px] bg-[#C2F7C5] flex items-center justify-center shrink-0 text-[#171A18]">
-                          <WaveIcon className="w-4 h-4 text-[#359D45]" />
+                        <div className="w-10 h-10 rounded-[14px] bg-[#C2F7C5] flex items-center justify-center shrink-0 text-[#171A18]">
+                          <WaveIcon className="w-5 h-5 text-[#359D45]" />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-semibold text-[14px] text-[#171A18] leading-tight truncate">
+                          <div className="font-bold text-[14.5px] text-[#171A18] leading-tight truncate">
                             {station.name}
                           </div>
                           <div className="text-[12px] text-[#737A75] mt-0.5 leading-tight truncate font-medium">
@@ -253,12 +256,12 @@ export const StationsScreen: React.FC = () => {
                   <button
                     key={station.id}
                     onClick={() => handleSelectStation(station.id)}
-                    className="w-full text-left p-3 rounded-[20px] border border-[#E3E8E4] bg-white hover:bg-[#F4F7F4] transition-all flex items-center justify-between gap-3"
+                    className="group w-full text-left p-3 rounded-[20px] border border-[#E3E8E4] bg-white hover:bg-[#F7FAF7] hover:border-[#D0D7D1] transition-all flex items-center justify-between gap-3 shadow-xs"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {renderIconBadge(station.status)}
                       <div className="min-w-0">
-                        <div className="font-semibold text-[14px] text-[#171A18] leading-tight truncate">
+                        <div className="font-semibold text-[14.5px] text-[#171A18] leading-tight truncate group-hover:text-black transition-colors">
                           {station.name}
                         </div>
                         <div className="text-[12px] text-[#737A75] mt-0.5 leading-tight truncate font-medium">
@@ -269,7 +272,7 @@ export const StationsScreen: React.FC = () => {
 
                     <div className="flex items-center gap-2.5 shrink-0">
                       {renderStatusPill(station.status)}
-                      <ArrowRight className="w-4 h-4 text-[#737A75]" />
+                      <ArrowRight className="w-4 h-4 text-[#737A75] group-hover:text-[#171A18] group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </button>
                 );
@@ -373,26 +376,26 @@ export const StationsScreen: React.FC = () => {
             {/* 2-Column Subcards Grid matching ui-ref Image 2 */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
               {/* Left Column (6 cols): Current Water Level (Mint) */}
-              <div className="md:col-span-6 bg-[#B8F5BC] rounded-[24px] p-5 flex flex-col justify-between min-h-[195px] relative overflow-hidden shadow-xs">
+              <div className="md:col-span-6 bg-[#A5F5A6] rounded-[24px] p-5 flex flex-col justify-between min-h-[200px] relative overflow-hidden shadow-xs">
                 <div>
                   <span className="text-[13px] font-semibold text-[#171A18]/80 block">
                     Current Water Level
                   </span>
-                  <div className="text-[36px] font-black tracking-tight text-[#171A18] leading-tight my-1">
+                  <div className="text-[38px] font-black tracking-tight text-[#171A18] leading-none my-2">
                     {selectedStation.waterLevel.toFixed(2)} m
                   </div>
-                  <span className="text-[12px] font-medium text-[#171A18]/75 block">
+                  <span className="text-[13px] font-medium text-[#171A18]/80 block">
                     {selectedStation.delta24h >= 0 ? '+' : ''}
                     {selectedStation.delta24h.toFixed(2)} m vs. 24 h ago
                   </span>
                 </div>
 
-                {/* Smooth bezier wave graphic with endpoint dot */}
+                {/* Smooth bezier wave graphic with endpoint dot matching ui-ref Image 2 */}
                 <div className="w-full h-12 mt-2 -mb-1">
                   <svg viewBox="0 0 200 44" preserveAspectRatio="none" className="w-full h-full overflow-visible">
                     <defs>
                       <linearGradient id="mintWaveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#171A18" stopOpacity="0.10" />
+                        <stop offset="0%" stopColor="#171A18" stopOpacity="0.12" />
                         <stop offset="100%" stopColor="#171A18" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
@@ -400,7 +403,7 @@ export const StationsScreen: React.FC = () => {
                       d="M 0 32 C 40 40, 75 16, 120 28 C 150 36, 175 12, 196 12"
                       fill="none"
                       stroke="#171A18"
-                      strokeWidth="2.4"
+                      strokeWidth="2.5"
                       strokeLinecap="round"
                     />
                     <path
@@ -413,7 +416,7 @@ export const StationsScreen: React.FC = () => {
                       r="3.5"
                       fill="#FFFFFF"
                       stroke="#171A18"
-                      strokeWidth="2.4"
+                      strokeWidth="2.5"
                     />
                   </svg>
                 </div>
@@ -422,12 +425,12 @@ export const StationsScreen: React.FC = () => {
               {/* Right Column (6 cols): Stacked Trend (30 days) and Last Anomaly */}
               <div className="md:col-span-6 flex flex-col justify-between gap-3.5">
                 {/* Top: Trend (30 days) (Lavender) */}
-                <div className="bg-[#DDD0F8] rounded-[22px] px-5 py-3.5 flex items-center justify-between min-h-[92px] relative overflow-hidden shadow-xs">
+                <div className="bg-[#DDD0F8] rounded-[22px] px-5 py-3.5 flex items-center justify-between min-h-[95px] relative overflow-hidden shadow-xs">
                   <div className="shrink-0 pr-2">
                     <span className="text-[12px] font-semibold text-[#171A18]/80 block">
                       Trend (30 days)
                     </span>
-                    <div className="text-[20px] lg:text-[22px] font-extrabold tracking-tight text-[#171A18] leading-tight mt-0.5 flex items-center gap-1 whitespace-nowrap">
+                    <div className="text-[22px] font-black tracking-tight text-[#171A18] leading-tight mt-0.5 flex items-center gap-1.5 whitespace-nowrap">
                       <span>↗</span>
                       <span>
                         {selectedStation.trend30d >= 0 ? '+' : ''}
@@ -439,10 +442,15 @@ export const StationsScreen: React.FC = () => {
                   {/* Lavender area curve matching Image 2 */}
                   <div className="w-28 sm:w-32 h-10 shrink-0 overflow-visible">
                     <svg viewBox="0 0 140 44" className="w-full h-full overflow-visible">
+                      <defs>
+                        <linearGradient id="lavenderTrendGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#8C52FF" stopOpacity="0.35" />
+                          <stop offset="100%" stopColor="#8C52FF" stopOpacity="0.08" />
+                        </linearGradient>
+                      </defs>
                       <path
                         d="M 0 34 C 30 34, 55 14, 85 10 C 115 7, 125 18, 140 16 L 140 44 L 0 44 Z"
-                        fill="#8C52FF"
-                        fillOpacity="0.30"
+                        fill="url(#lavenderTrendGrad)"
                       />
                       <path
                         d="M 0 34 C 30 34, 55 14, 85 10 C 115 7, 125 18, 140 16"

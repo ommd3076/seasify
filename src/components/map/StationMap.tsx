@@ -205,22 +205,22 @@ export const StationMap: React.FC<StationMapProps> = ({
       {/* Floating Map Legend (Bottom-Left matching ui-ref Image 2) */}
       <div className="absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur-xs px-4 py-2 rounded-full border border-[#D9DEDA] shadow-sm flex items-center gap-4 text-xs font-semibold text-[#171A18] select-none">
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#68DD79]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#359D45]" />
           <span>Normal</span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#C5A8F8]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#8C52FF]" />
           <span>Elevated</span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#82A7FD]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" />
           <span>Low Tide</span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#9CA3AF]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#737A75]" />
           <span>Maintenance</span>
         </div>
       </div>

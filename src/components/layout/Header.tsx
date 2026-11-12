@@ -101,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-3">
         {extraControls}
 
-        {/* Station / Region Filter Pill */}
+        {/* Station / Region Filter Pill matching ui-ref Image 2 (default label is 'All Regions') */}
         <Dropdown
           data-testid="station-filter"
           icon={<MapPin className="w-4 h-4 text-[#737A75]" />}
