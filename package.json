@@ -2,6 +2,22 @@
   "name": "seasify",
   "private": true,
   "version": "1.0.0",
+  "description": "Coastal water-level telemetry monitoring and automata pattern recognition platform powered by NOAA CO-OPS real-time APIs",
+  "keywords": [
+    "coastal-monitoring",
+    "automata-theory",
+    "pattern-recognition",
+    "noaa-coops",
+    "water-level",
+    "finite-state-machine",
+    "storm-surge"
+  ],
+  "author": "Seasify Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ommd3076/seasify.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
