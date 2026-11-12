@@ -3,7 +3,7 @@
  * Converts between metric (meters) and English / Imperial (feet).
  */
 
-export type WaterLevelUnit = 'metric' | 'english' | 'meters' | 'feet';
+export type WaterLevelUnit = 'metric' | 'english' | 'meters' | 'feet' | 'imperial';
 
 export interface FormattedLevel {
   value: number;
@@ -17,7 +17,7 @@ export function formatWaterLevel(
   unitSetting: WaterLevelUnit = 'metric',
   precision: number = 2
 ): FormattedLevel {
-  const isFeet = unitSetting === 'english' || unitSetting === 'feet';
+  const isFeet = unitSetting === 'english' || unitSetting === 'feet' || unitSetting === 'imperial';
   if (isFeet) {
     const feet = meters * 3.28084;
     const formatted = feet.toFixed(precision);
@@ -43,7 +43,7 @@ export function formatDelta(
   unitSetting: WaterLevelUnit = 'metric',
   precision: number = 2
 ): string {
-  const isFeet = unitSetting === 'english' || unitSetting === 'feet';
+  const isFeet = unitSetting === 'english' || unitSetting === 'feet' || unitSetting === 'imperial';
   const val = isFeet ? meters * 3.28084 : meters;
   const sign = val >= 0 ? '+' : '';
   const unit = isFeet ? 'ft' : 'm';

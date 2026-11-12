@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Search,
   ArrowUpRight,
@@ -17,9 +17,14 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { useTideDataStore } from '@/stores/tideDataStore';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { formatWaterLevel } from '@/utils/formatUnit';
 
 export const EventsScreen: React.FC = () => {
   const { resolveEvent } = useTideDataStore();
+  const { settings } = useSettingsStore();
+  const unitSetting = settings.waterLevelUnit;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEventIndex, setSelectedEventIndex] = useState(0);
   const [isResolved, setIsResolved] = useState(false);

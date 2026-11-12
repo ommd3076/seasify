@@ -226,8 +226,8 @@ export const StationMap: React.FC<StationMapProps> = ({
       </div>
 
       {/* Discreet bottom-right attribution */}
-      <div className="absolute bottom-1.5 right-3 z-[400] text-[10px] text-[#737A75]/60 pointer-events-none select-none font-medium">
-        © OpenStreetMap & NOAA CO-OPS
+      <div className="absolute bottom-1.5 right-3 z-[400] text-[9px] text-[#737A75]/50 pointer-events-none select-none font-medium">
+        © NOAA CO-OPS & Esri Ocean
       </div>
     </div>
   );

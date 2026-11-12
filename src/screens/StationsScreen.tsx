@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -90,6 +90,15 @@ export const StationsScreen: React.FC = () => {
     return filteredStations.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredStations, validPage, ITEMS_PER_PAGE]);
 
+  // Auto-sync pagination to ensure selected station is visible in the list
+  useEffect(() => {
+    const idx = filteredStations.findIndex((s) => s.id === selectedStation.id);
+    if (idx !== -1) {
+      const targetPage = Math.floor(idx / ITEMS_PER_PAGE) + 1;
+      setCurrentPage(targetPage);
+    }
+  }, [selectedStation.id, filteredStations]);
+
   // Status Badge / Pill Helper matching ui-ref Image 2
   const renderStatusPill = (status: StationMetadata['status']) => {
     switch (status) {
@@ -125,32 +134,32 @@ export const StationsScreen: React.FC = () => {
     }
   };
 
-  // Circular Icon Badge for Unselected Row
+  // Squircle Icon Badge for Unselected Row matching ui-ref Image 2
   const renderIconBadge = (status: StationMetadata['status']) => {
     switch (status) {
       case 'elevated':
         return (
-          <div className="w-10 h-10 rounded-full bg-[#EDE7FA] text-[#8C52FF] flex items-center justify-center shrink-0">
-            <WaveIcon className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-[14px] bg-[#EDE7FA] text-[#8C52FF] flex items-center justify-center shrink-0">
+            <WaveIcon className="w-4 h-4" />
           </div>
         );
       case 'low_tide':
         return (
-          <div className="w-10 h-10 rounded-full bg-[#E3ECFE] text-[#3B82F6] flex items-center justify-center shrink-0">
-            <WaveIcon className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-[14px] bg-[#E3ECFE] text-[#3B82F6] flex items-center justify-center shrink-0">
+            <WaveIcon className="w-4 h-4" />
           </div>
         );
       case 'maintenance':
         return (
-          <div className="w-10 h-10 rounded-full bg-[#EAEFEC] text-[#737A75] flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-[14px] bg-[#EAEFEC] text-[#737A75] flex items-center justify-center shrink-0">
             <Wrench className="w-4 h-4" />
           </div>
         );
       case 'normal':
       default:
         return (
-          <div className="w-10 h-10 rounded-full bg-[#E2FBE3] text-[#359D45] flex items-center justify-center shrink-0">
-            <WaveIcon className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-[14px] bg-[#E2FBE3] text-[#359D45] flex items-center justify-center shrink-0">
+            <WaveIcon className="w-4 h-4" />
           </div>
         );
     }
@@ -218,8 +227,8 @@ export const StationsScreen: React.FC = () => {
                       className="w-full text-left p-3 rounded-[20px] border-2 border-[#68DD79] bg-[#E2FBE3] transition-all flex items-center justify-between gap-3 shadow-xs"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        {/* Circular Green Wave Icon Badge */}
-                        <div className="w-9 h-9 rounded-full bg-[#C2F7C5] flex items-center justify-center shrink-0 text-[#171A18]">
+                        {/* Squircle Green Wave Icon Badge */}
+                        <div className="w-9 h-9 rounded-[14px] bg-[#C2F7C5] flex items-center justify-center shrink-0 text-[#171A18]">
                           <WaveIcon className="w-4 h-4 text-[#359D45]" />
                         </div>
                         <div className="min-w-0">
@@ -340,10 +349,10 @@ export const StationsScreen: React.FC = () => {
 
           {/* Bottom: Selected Station Summary Card */}
           <div className="bg-surface rounded-[28px] border border-[#D9DEDA] shadow-sm p-6">
-            {/* Header: Circle Icon, Station Name & ID, Status Pill */}
+            {/* Header: Squircle Icon, Station Name & ID, Status Pill */}
             <div className="flex items-center justify-between gap-4 mb-5 pb-4 border-b border-[#EAEFEC]">
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-full bg-[#E2FBE3] text-[#359D45] flex items-center justify-center shrink-0">
+                <div className="w-11 h-11 rounded-[16px] bg-[#E2FBE3] text-[#359D45] flex items-center justify-center shrink-0">
                   <WaveIcon className="w-6 h-6" />
                 </div>
                 <div className="min-w-0">
@@ -361,15 +370,15 @@ export const StationsScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* 3 Columns Subcards Grid matching ui-ref Image 2 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Subcard 1: Current Water Level (Mint) */}
-              <div className="bg-[#B8F5BC] rounded-[24px] p-5 flex flex-col justify-between h-[185px] relative overflow-hidden shadow-xs">
+            {/* 2-Column Subcards Grid matching ui-ref Image 2 */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
+              {/* Left Column (6 cols): Current Water Level (Mint) */}
+              <div className="md:col-span-6 bg-[#B8F5BC] rounded-[24px] p-5 flex flex-col justify-between min-h-[195px] relative overflow-hidden shadow-xs">
                 <div>
                   <span className="text-[13px] font-semibold text-[#171A18]/80 block">
                     Current Water Level
                   </span>
-                  <div className="text-[34px] font-black tracking-tight text-[#171A18] leading-tight my-1">
+                  <div className="text-[36px] font-black tracking-tight text-[#171A18] leading-tight my-1">
                     {selectedStation.waterLevel.toFixed(2)} m
                   </div>
                   <span className="text-[12px] font-medium text-[#171A18]/75 block">
@@ -379,8 +388,8 @@ export const StationsScreen: React.FC = () => {
                 </div>
 
                 {/* Smooth bezier wave graphic with endpoint dot */}
-                <div className="w-full h-12 mt-2">
-                  <svg viewBox="0 0 200 48" className="w-full h-full overflow-visible">
+                <div className="w-full h-12 mt-2 -mb-1">
+                  <svg viewBox="0 0 200 44" preserveAspectRatio="none" className="w-full h-full overflow-visible">
                     <defs>
                       <linearGradient id="mintWaveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" stopColor="#171A18" stopOpacity="0.10" />
@@ -388,19 +397,19 @@ export const StationsScreen: React.FC = () => {
                       </linearGradient>
                     </defs>
                     <path
-                      d="M 0 36 C 40 44, 70 20, 110 32 C 140 40, 160 16, 185 16"
+                      d="M 0 32 C 40 40, 75 16, 120 28 C 150 36, 175 12, 196 12"
                       fill="none"
                       stroke="#171A18"
                       strokeWidth="2.4"
                       strokeLinecap="round"
                     />
                     <path
-                      d="M 0 36 C 40 44, 70 20, 110 32 C 140 40, 160 16, 185 16 L 185 48 L 0 48 Z"
+                      d="M 0 32 C 40 40, 75 16, 120 28 C 150 36, 175 12, 196 12 L 196 44 L 0 44 Z"
                       fill="url(#mintWaveGrad)"
                     />
                     <circle
-                      cx="185"
-                      cy="16"
+                      cx="196"
+                      cy="12"
                       r="3.5"
                       fill="#FFFFFF"
                       stroke="#171A18"
@@ -410,62 +419,65 @@ export const StationsScreen: React.FC = () => {
                 </div>
               </div>
 
-              {/* Subcard 2: Trend (30 days) (Lavender) */}
-              <div className="bg-[#DDD0F8] rounded-[24px] p-5 flex flex-col justify-between h-[185px] relative overflow-hidden shadow-xs">
-                <div>
-                  <span className="text-[13px] font-semibold text-[#171A18]/80 block">
-                    Trend (30 days)
-                  </span>
-                  <div className="text-[26px] font-extrabold tracking-tight text-[#171A18] leading-tight my-1 flex items-center gap-1.5">
-                    <span>↗</span>
-                    <span>
-                      {selectedStation.trend30d >= 0 ? '+' : ''}
-                      {selectedStation.trend30d.toFixed(2)} m
+              {/* Right Column (6 cols): Stacked Trend (30 days) and Last Anomaly */}
+              <div className="md:col-span-6 flex flex-col justify-between gap-3.5">
+                {/* Top: Trend (30 days) (Lavender) */}
+                <div className="bg-[#DDD0F8] rounded-[22px] px-5 py-3.5 flex items-center justify-between min-h-[92px] relative overflow-hidden shadow-xs">
+                  <div className="shrink-0 pr-2">
+                    <span className="text-[12px] font-semibold text-[#171A18]/80 block">
+                      Trend (30 days)
                     </span>
+                    <div className="text-[20px] lg:text-[22px] font-extrabold tracking-tight text-[#171A18] leading-tight mt-0.5 flex items-center gap-1 whitespace-nowrap">
+                      <span>↗</span>
+                      <span>
+                        {selectedStation.trend30d >= 0 ? '+' : ''}
+                        {selectedStation.trend30d.toFixed(2)} m
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Lavender area curve matching Image 2 */}
+                  <div className="w-28 sm:w-32 h-10 shrink-0 overflow-visible">
+                    <svg viewBox="0 0 140 44" className="w-full h-full overflow-visible">
+                      <path
+                        d="M 0 34 C 30 34, 55 14, 85 10 C 115 7, 125 18, 140 16 L 140 44 L 0 44 Z"
+                        fill="#8C52FF"
+                        fillOpacity="0.30"
+                      />
+                      <path
+                        d="M 0 34 C 30 34, 55 14, 85 10 C 115 7, 125 18, 140 16"
+                        fill="none"
+                        stroke="#8C52FF"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
                   </div>
                 </div>
 
-                {/* Lavender filled area curve */}
-                <div className="w-full h-12 mt-2">
-                  <svg viewBox="0 0 200 48" className="w-full h-full overflow-visible">
-                    <path
-                      d="M 0 38 C 50 40, 80 18, 120 22 C 150 25, 170 16, 200 18 L 200 48 L 0 48 Z"
-                      fill="#9D73EE"
-                      fillOpacity="0.45"
-                    />
-                    <path
-                      d="M 0 38 C 50 40, 80 18, 120 22 C 150 25, 170 16, 200 18"
-                      fill="none"
-                      stroke="#8C52FF"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Subcard 3: Last Anomaly (Surface Card) */}
-              <div
-                onClick={() => navigate('/events')}
-                className="bg-white border border-[#D9DEDA] rounded-[24px] p-5 flex flex-col justify-between h-[185px] hover:border-[#B5BEB6] transition-all cursor-pointer shadow-xs group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[#171A18] shrink-0" />
-                    <span className="text-[13px] font-semibold text-[#171A18]">
-                      Last Anomaly
-                    </span>
+                {/* Bottom: Last Anomaly (Surface Card) */}
+                <div
+                  onClick={() => navigate('/events')}
+                  className="bg-white border border-[#D9DEDA] rounded-[22px] px-5 py-3.5 flex flex-col justify-between min-h-[92px] hover:border-[#B5BEB6] transition-all cursor-pointer shadow-xs group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-[#171A18] shrink-0" />
+                      <span className="text-[13px] font-semibold text-[#171A18]">
+                        Last Anomaly
+                      </span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[#737A75] group-hover:text-[#171A18] group-hover:translate-x-0.5 transition-all" />
                   </div>
-                  <ArrowRight className="w-4 h-4 text-[#737A75] group-hover:text-[#171A18] group-hover:translate-x-0.5 transition-all" />
-                </div>
 
-                <div>
-                  <div className="text-[18px] font-bold text-[#171A18] leading-snug">
-                    {anomalyDateStr}
+                  <div className="mt-1">
+                    <div className="text-[16px] font-bold text-[#171A18] leading-snug">
+                      {anomalyDateStr}
+                    </div>
+                    <p className="text-[12px] text-[#737A75] font-medium leading-snug truncate mt-0.5">
+                      {selectedStation.lastAnomaly?.description || 'Elevated water level (+0.51 m)'}
+                    </p>
                   </div>
-                  <p className="text-[13px] text-[#737A75] mt-1 font-medium leading-snug">
-                    {selectedStation.lastAnomaly?.description || 'Elevated water level (+0.51 m)'}
-                  </p>
                 </div>
               </div>
             </div>

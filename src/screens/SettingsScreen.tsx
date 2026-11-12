@@ -422,7 +422,7 @@ export const SettingsScreen: React.FC = () => {
                     <div className="absolute left-0 bottom-6 z-50 w-64 p-3 bg-white rounded-2xl shadow-xl border border-border text-xs text-primary-text leading-relaxed">
                       <div className="font-bold mb-1 text-[#156024]">Sensor Precision</div>
                       <p className="text-[11px] text-secondary-text">
-                        Formats acoustic sensor soundings to 2 decimals ($0.01\text{ m} \approx 1\text{ cm}$), exceeding IHO S-44 hydrographic standards.
+                        Formats acoustic sensor soundings to 2 decimals (0.01 m ≈ 1 cm), exceeding IHO S-44 hydrographic standards.
                       </p>
                     </div>
                   )}

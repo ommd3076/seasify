@@ -199,8 +199,8 @@
   color: #171A18 !important;
   border: 1px solid #D9DEDA !important;
   border-radius: 9999px !important;
-  padding: 5px 14px !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+  padding: 6px 16px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.09) !important;
   font-family: inherit !important;
   font-size: 13px !important;
   font-weight: 700 !important;
@@ -210,5 +210,6 @@
   border-top-color: #FFFFFF !important;
   border-width: 6px 6px 0 !important;
   bottom: -6px !important;
+  left: 50% !important;
   margin-left: -6px !important;
 }
